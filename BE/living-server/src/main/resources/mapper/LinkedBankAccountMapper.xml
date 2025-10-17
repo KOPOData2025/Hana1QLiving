@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.living.hana.mapper.LinkedBankAccountMapper">
+    
+    <insert id="insertLinkedAccount" parameterType="com.living.hana.entity.LinkedBankAccount">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            SELECT LINKED_BANK_ACCOUNT_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO LINKED_BANK_ACCOUNTS (
+            ID, USER_ID, USER_CI, ACCOUNT_NUMBER, ACCOUNT_NAME, 
+            ACCOUNT_TYPE, STATUS, CREATED_AT, UPDATED_AT
+        ) VALUES (
+            #{id}, #{userId}, #{userCi}, #{accountNumber}, #{accountName}, 
+            #{accountType}, #{status}, SYSDATE, SYSDATE
+        )
+    </insert>
+
+    <select id="findById" resultType="com.living.hana.entity.LinkedBankAccount">
+        SELECT
+            ID, USER_ID, USER_CI, ACCOUNT_NUMBER, ACCOUNT_NAME,
+            ACCOUNT_TYPE, STATUS,
+            TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT,
+            TO_CHAR(UPDATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS UPDATED_AT
+        FROM LINKED_BANK_ACCOUNTS
+        WHERE ID = #{id}
+    </select>
+
+    <select id="findAccountsByUserId" resultType="com.living.hana.entity.LinkedBankAccount">
+        SELECT
+            ID, USER_ID, USER_CI, ACCOUNT_NUMBER, ACCOUNT_NAME,
+            ACCOUNT_TYPE, STATUS,
+            TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT,
+            TO_CHAR(UPDATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS UPDATED_AT
+        FROM LINKED_BANK_ACCOUNTS
+        WHERE USER_ID = #{userId}
+        AND STATUS = 'ACTIVE'
+        ORDER BY CREATED_AT DESC
+    </select>
+
+    <select id="findActiveAccountsByUserId" resultType="com.living.hana.entity.LinkedBankAccount">
+        SELECT
+            ID, USER_ID, USER_CI, ACCOUNT_NUMBER, ACCOUNT_NAME,
+            ACCOUNT_TYPE, STATUS, AUTO_PAYMENT_ENABLED, AUTO_PAYMENT_AMOUNT,
+            AUTO_PAYMENT_TRANSFER_DAY, HANA_CONTRACT_ID,
+            TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT,
+            TO_CHAR(UPDATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS UPDATED_AT
+        FROM LINKED_BANK_ACCOUNTS
+        WHERE USER_ID = #{userId}
+        AND STATUS = 'ACTIVE'
+        AND AUTO_PAYMENT_ENABLED = 1
+        ORDER BY CREATED_AT DESC
+    </select>
+    
+    <select id="findAccountsByUserCi" resultType="com.living.hana.entity.LinkedBankAccount">
+        SELECT 
+            ID, USER_ID, USER_CI, ACCOUNT_NUMBER, ACCOUNT_NAME, 
+            ACCOUNT_TYPE, STATUS,
+            TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT,
+            TO_CHAR(UPDATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS UPDATED_AT
+        FROM LINKED_BANK_ACCOUNTS 
+        WHERE USER_CI = #{userCi} 
+        AND STATUS = 'ACTIVE'
+        ORDER BY CREATED_AT DESC
+    </select>
+    
+    <select id="findAccountByUserIdAndAccountNumber" resultType="com.living.hana.entity.LinkedBankAccount">
+        SELECT 
+            ID, USER_ID, USER_CI, ACCOUNT_NUMBER, ACCOUNT_NAME, 
+            ACCOUNT_TYPE, STATUS,
+            TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT,
+            TO_CHAR(UPDATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS UPDATED_AT
+        FROM LINKED_BANK_ACCOUNTS 
+        WHERE USER_ID = #{userId} 
+        AND ACCOUNT_NUMBER = #{accountNumber}
+    </select>
+    
+    <update id="updateAccountStatus">
+        UPDATE LINKED_BANK_ACCOUNTS 
+        SET STATUS = #{status}, UPDATED_AT = SYSDATE 
+        WHERE ID = #{id}
+    </update>
+    
+    <delete id="deleteLinkedAccount">
+        DELETE FROM LINKED_BANK_ACCOUNTS 
+        WHERE ID = #{id}
+    </delete>
+    
+    <select id="existsByUserIdAndAccountNumber" resultType="boolean">
+        SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
+        FROM LINKED_BANK_ACCOUNTS 
+        WHERE USER_ID = #{userId} 
+        AND ACCOUNT_NUMBER = #{accountNumber}
+        AND STATUS = 'ACTIVE'
+    </select>
+    
+    <!-- 자동결제 관련 쿼리들 추가 -->
+    <select id="findByUserIdAndAutoPaymentEnabled" resultType="com.living.hana.entity.LinkedBankAccount">
+        SELECT 
+            ID, USER_ID, USER_CI, ACCOUNT_NUMBER, ACCOUNT_NAME, 
+            ACCOUNT_TYPE, STATUS,
+            AUTO_PAYMENT_ENABLED, AUTO_PAYMENT_AMOUNT, AUTO_PAYMENT_TRANSFER_DAY, HANA_CONTRACT_ID,
+            TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT,
+            TO_CHAR(UPDATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS UPDATED_AT
+        FROM LINKED_BANK_ACCOUNTS 
+        WHERE USER_ID = #{userId} 
+        AND AUTO_PAYMENT_ENABLED = #{autoPaymentEnabled}
+        AND STATUS = 'ACTIVE'
+        ORDER BY CREATED_AT DESC
+    </select>
+    
+    <update id="updateLinkedBankAccount" parameterType="com.living.hana.entity.LinkedBankAccount">
+        UPDATE LINKED_BANK_ACCOUNTS SET
+            USER_CI = #{userCi},
+            ACCOUNT_NAME = #{accountName},
+            ACCOUNT_TYPE = #{accountType},
+            STATUS = #{status},
+            AUTO_PAYMENT_ENABLED = #{autoPaymentEnabled},
+            AUTO_PAYMENT_AMOUNT = #{autoPaymentAmount},
+            AUTO_PAYMENT_TRANSFER_DAY = #{autoPaymentTransferDay},
+            HANA_CONTRACT_ID = #{hanaContractId},
+            UPDATED_AT = SYSDATE
+        WHERE ID = #{id}
+    </update>
+    
+</mapper>

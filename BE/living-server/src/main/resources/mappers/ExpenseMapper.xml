@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.living.hana.mapper.ExpenseMapper">
+
+    <!-- ResultMap 정의 -->
+    <resultMap id="ExpenseResultMap" type="com.living.hana.entity.Expense">
+        <id property="id" column="ID"/>
+        <result property="category" column="CATEGORY"/>
+        <result property="description" column="DESCRIPTION"/>
+        <result property="amount" column="AMOUNT"/>
+        <result property="expenseDate" column="EXPENSE_DATE"/>
+        <result property="buildingId" column="BUILDING_ID"/>
+        <result property="createdBy" column="CREATED_BY"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="buildingName" column="BUILDING_NAME"/>
+        <result property="createdByName" column="CREATED_BY_NAME"/>
+    </resultMap>
+
+    <!-- 지출 등록 -->
+    <insert id="insert" parameterType="com.living.hana.entity.Expense" useGeneratedKeys="true" keyProperty="id">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            SELECT NVL(MAX(ID), 0) + 1 FROM EXPENSES
+        </selectKey>
+        INSERT INTO EXPENSES (
+            ID, CATEGORY, DESCRIPTION, AMOUNT, EXPENSE_DATE, BUILDING_ID, CREATED_BY, CREATED_AT
+        ) VALUES (
+            #{id}, #{category}, #{description}, #{amount},
+            TO_DATE(#{expenseDate}, 'YYYY-MM-DD'), #{buildingId}, #{createdBy}, SYSTIMESTAMP
+        )
+    </insert>
+
+    <!-- 지출 조회 (ID) -->
+    <select id="findById" parameterType="long" resultMap="ExpenseResultMap">
+        SELECT e.*,
+               b.NAME AS BUILDING_NAME,
+               u.NAME AS CREATED_BY_NAME,
+               TO_CHAR(e.EXPENSE_DATE, 'YYYY-MM-DD') AS EXPENSE_DATE,
+               TO_CHAR(e.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT
+        FROM EXPENSES e
+        LEFT JOIN BUILDINGS b ON e.BUILDING_ID = b.ID
+        LEFT JOIN USERS u ON e.CREATED_BY = u.ID
+        WHERE e.ID = #{id}
+    </select>
+
+    <!-- 지출 목록 조회 (전체) -->
+    <select id="findAll" resultMap="ExpenseResultMap">
+        SELECT e.*,
+               b.NAME AS BUILDING_NAME,
+               u.NAME AS CREATED_BY_NAME,
+               TO_CHAR(e.EXPENSE_DATE, 'YYYY-MM-DD') AS EXPENSE_DATE,
+               TO_CHAR(e.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT
+        FROM EXPENSES e
+        LEFT JOIN BUILDINGS b ON e.BUILDING_ID = b.ID
+        LEFT JOIN USERS u ON e.CREATED_BY = u.ID
+        ORDER BY e.EXPENSE_DATE DESC, e.CREATED_AT DESC
+    </select>
+
+    <!-- 지출 목록 조회 (건물별) -->
+    <select id="findByBuildingId" parameterType="long" resultMap="ExpenseResultMap">
+        SELECT e.*,
+               b.NAME AS BUILDING_NAME,
+               u.NAME AS CREATED_BY_NAME,
+               TO_CHAR(e.EXPENSE_DATE, 'YYYY-MM-DD') AS EXPENSE_DATE,
+               TO_CHAR(e.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT
+        FROM EXPENSES e
+        LEFT JOIN BUILDINGS b ON e.BUILDING_ID = b.ID
+        LEFT JOIN USERS u ON e.CREATED_BY = u.ID
+        WHERE e.BUILDING_ID = #{buildingId}
+        ORDER BY e.EXPENSE_DATE DESC, e.CREATED_AT DESC
+    </select>
+
+    <!-- 지출 목록 조회 (카테고리별) -->
+    <select id="findByCategory" parameterType="string" resultMap="ExpenseResultMap">
+        SELECT e.*,
+               b.NAME AS BUILDING_NAME,
+               u.NAME AS CREATED_BY_NAME,
+               TO_CHAR(e.EXPENSE_DATE, 'YYYY-MM-DD') AS EXPENSE_DATE,
+               TO_CHAR(e.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT
+        FROM EXPENSES e
+        LEFT JOIN BUILDINGS b ON e.BUILDING_ID = b.ID
+        LEFT JOIN USERS u ON e.CREATED_BY = u.ID
+        WHERE e.CATEGORY = #{category}
+        ORDER BY e.EXPENSE_DATE DESC, e.CREATED_AT DESC
+    </select>
+
+    <!-- 지출 목록 조회 (기간별) -->
+    <select id="findByDateRange" resultMap="ExpenseResultMap">
+        SELECT e.*,
+               b.NAME AS BUILDING_NAME,
+               u.NAME AS CREATED_BY_NAME,
+               TO_CHAR(e.EXPENSE_DATE, 'YYYY-MM-DD') AS EXPENSE_DATE,
+               TO_CHAR(e.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT
+        FROM EXPENSES e
+        LEFT JOIN BUILDINGS b ON e.BUILDING_ID = b.ID
+        LEFT JOIN USERS u ON e.CREATED_BY = u.ID
+        WHERE e.EXPENSE_DATE BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+        ORDER BY e.EXPENSE_DATE DESC, e.CREATED_AT DESC
+    </select>
+
+    <!-- 지출 목록 조회 (복합 조건) -->
+    <select id="findByConditions" resultMap="ExpenseResultMap">
+        SELECT e.*,
+               b.NAME AS BUILDING_NAME,
+               u.NAME AS CREATED_BY_NAME,
+               TO_CHAR(e.EXPENSE_DATE, 'YYYY-MM-DD') AS EXPENSE_DATE,
+               TO_CHAR(e.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT
+        FROM EXPENSES e
+        LEFT JOIN BUILDINGS b ON e.BUILDING_ID = b.ID
+        LEFT JOIN USERS u ON e.CREATED_BY = u.ID
+        <where>
+            <if test="buildingId != null">
+                AND e.BUILDING_ID = #{buildingId}
+            </if>
+            <if test="category != null and category != ''">
+                AND e.CATEGORY = #{category}
+            </if>
+            <if test="startDate != null and endDate != null">
+                AND e.EXPENSE_DATE BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+            </if>
+        </where>
+        ORDER BY e.EXPENSE_DATE DESC, e.CREATED_AT DESC
+    </select>
+
+    <!-- 지출 수정 -->
+    <update id="update" parameterType="com.living.hana.entity.Expense">
+        UPDATE EXPENSES SET
+            CATEGORY = #{category},
+            DESCRIPTION = #{description},
+            AMOUNT = #{amount},
+            EXPENSE_DATE = TO_DATE(#{expenseDate}, 'YYYY-MM-DD'),
+            BUILDING_ID = #{buildingId}
+        WHERE ID = #{id}
+    </update>
+
+    <!-- 지출 삭제 -->
+    <delete id="deleteById" parameterType="long">
+        DELETE FROM EXPENSES WHERE ID = #{id}
+    </delete>
+
+    <!-- 지출 개수 조회 -->
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM EXPENSES
+    </select>
+
+    <!-- 건물별 지출 개수 -->
+    <select id="countByBuildingId" parameterType="long" resultType="long">
+        SELECT COUNT(*) FROM EXPENSES WHERE BUILDING_ID = #{buildingId}
+    </select>
+
+    <!-- 카테고리별 지출 개수 -->
+    <select id="countByCategory" parameterType="string" resultType="long">
+        SELECT COUNT(*) FROM EXPENSES WHERE CATEGORY = #{category}
+    </select>
+
+    <!-- 총 지출 금액 -->
+    <select id="getTotalAmount" resultType="java.math.BigDecimal">
+        SELECT NVL(SUM(AMOUNT), 0) FROM EXPENSES
+    </select>
+
+    <!-- 건물별 총 지출 금액 -->
+    <select id="getTotalAmountByBuildingId" parameterType="long" resultType="java.math.BigDecimal">
+        SELECT NVL(SUM(AMOUNT), 0) FROM EXPENSES WHERE BUILDING_ID = #{buildingId}
+    </select>
+
+    <!-- 기간별 총 지출 금액 -->
+    <select id="getTotalAmountByDateRange" resultType="java.math.BigDecimal">
+        SELECT NVL(SUM(AMOUNT), 0) FROM EXPENSES
+        WHERE EXPENSE_DATE BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+    </select>
+
+    <!-- 카테고리별 지출 통계 -->
+    <select id="getCategorySummary" resultType="com.living.hana.dto.ExpenseResponse$CategorySummary">
+        SELECT
+            CATEGORY as category,
+            NVL(SUM(AMOUNT), 0) as amount,
+            COUNT(*) as count,
+            ROUND(
+                NVL(SUM(AMOUNT), 0) * 100.0 /
+                NULLIF(
+                    (SELECT NVL(SUM(AMOUNT), 0) FROM EXPENSES
+                     WHERE 1=1
+                     <if test="buildingId != null">
+                         AND BUILDING_ID = #{buildingId}
+                     </if>
+                     <if test="startDate != null and endDate != null">
+                         AND EXPENSE_DATE BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+                     </if>
+                    ), 0
+                ), 2
+            ) as percentage
+        FROM EXPENSES
+        WHERE 1=1
+        <if test="buildingId != null">
+            AND BUILDING_ID = #{buildingId}
+        </if>
+        <if test="startDate != null and endDate != null">
+            AND EXPENSE_DATE BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+        </if>
+        GROUP BY CATEGORY
+        ORDER BY amount DESC
+    </select>
+
+    <!-- 월별 지출 통계 -->
+    <select id="getMonthlySummary" resultType="com.living.hana.dto.ExpenseResponse$MonthlySummary">
+        SELECT
+            TO_CHAR(EXPENSE_DATE, 'YYYY-MM') as month,
+            NVL(SUM(AMOUNT), 0) as amount,
+            COUNT(*) as count
+        FROM EXPENSES
+        WHERE 1=1
+        <if test="buildingId != null">
+            AND BUILDING_ID = #{buildingId}
+        </if>
+        <if test="startDate != null and endDate != null">
+            AND EXPENSE_DATE BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+        </if>
+        GROUP BY TO_CHAR(EXPENSE_DATE, 'YYYY-MM')
+        ORDER BY month DESC
+    </select>
+
+</mapper>

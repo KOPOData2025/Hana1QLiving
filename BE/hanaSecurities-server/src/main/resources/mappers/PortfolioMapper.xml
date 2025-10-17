@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hana.securities.mapper.PortfolioMapper">
+
+    <resultMap id="portfolioResultMap" type="com.hana.securities.entity.Portfolio">
+        <id column="id" property="id" jdbcType="NUMERIC"/>
+        <result column="user_id" property="userId" jdbcType="NUMERIC"/>
+        <result column="product_id" property="productId" jdbcType="VARCHAR"/>
+        <result column="product_name" property="productName" jdbcType="VARCHAR"/>
+        <result column="product_type" property="productType" jdbcType="VARCHAR"/>
+        <result column="quantity" property="quantity" jdbcType="NUMERIC"/>
+        <result column="avg_purchase_price" property="avgPurchasePrice" jdbcType="DECIMAL"/>
+        <result column="total_invested_amount" property="totalInvestedAmount" jdbcType="DECIMAL"/>
+        <result column="current_price" property="currentPrice" jdbcType="DECIMAL"/>
+        <result column="current_value" property="currentValue" jdbcType="DECIMAL"/>
+        <result column="unrealized_gain_loss" property="unrealizedGainLoss" jdbcType="DECIMAL"/>
+        <result column="unrealized_return_rate" property="unrealizedReturnRate" jdbcType="DECIMAL"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="first_purchase_date" property="firstPurchaseDate" jdbcType="TIMESTAMP"/>
+        <result column="last_purchase_date" property="lastPurchaseDate" jdbcType="TIMESTAMP"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="findByUserId" parameterType="Long" resultMap="portfolioResultMap">
+        SELECT * FROM PORTFOLIOS 
+        WHERE user_id = #{userId} 
+        AND status = 'ACTIVE'
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findByUserIdAndProductId" resultMap="portfolioResultMap">
+        SELECT * FROM PORTFOLIOS 
+        WHERE user_id = #{userId} AND product_id = #{productId}
+        AND status = 'ACTIVE'
+    </select>
+
+    <select id="findByUserIdAndStatus" resultMap="portfolioResultMap">
+        SELECT * FROM PORTFOLIOS 
+        WHERE user_id = #{userId} AND status = #{status}
+        ORDER BY created_at DESC
+    </select>
+
+    <insert id="insertPortfolio" parameterType="com.hana.securities.entity.Portfolio" useGeneratedKeys="true" keyProperty="id">
+        <selectKey keyProperty="id" resultType="Long" order="BEFORE">
+            SELECT PORTFOLIO_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO PORTFOLIOS (
+            id, user_id, product_id, product_name, product_type, quantity,
+            avg_purchase_price, total_invested_amount, current_price, current_value,
+            unrealized_gain_loss, unrealized_return_rate, status,
+            first_purchase_date, last_purchase_date, created_at, updated_at
+        ) VALUES (
+            #{id,jdbcType=NUMERIC}, #{userId,jdbcType=NUMERIC}, #{productId,jdbcType=VARCHAR}, 
+            #{productName,jdbcType=VARCHAR}, #{productType,jdbcType=VARCHAR}, #{quantity,jdbcType=NUMERIC},
+            #{avgPurchasePrice,jdbcType=DECIMAL}, #{totalInvestedAmount,jdbcType=DECIMAL}, 
+            #{currentPrice,jdbcType=DECIMAL}, #{currentValue,jdbcType=DECIMAL},
+            #{unrealizedGainLoss,jdbcType=DECIMAL}, #{unrealizedReturnRate,jdbcType=DECIMAL}, 
+            #{status,jdbcType=VARCHAR}, #{firstPurchaseDate,jdbcType=TIMESTAMP}, 
+            #{lastPurchaseDate,jdbcType=TIMESTAMP}, #{createdAt,jdbcType=TIMESTAMP}, 
+            #{updatedAt,jdbcType=TIMESTAMP}
+        )
+    </insert>
+
+    <update id="updatePortfolio" parameterType="com.hana.securities.entity.Portfolio">
+        UPDATE PORTFOLIOS SET
+            quantity = #{quantity,jdbcType=NUMERIC},
+            avg_purchase_price = #{avgPurchasePrice,jdbcType=DECIMAL},
+            total_invested_amount = #{totalInvestedAmount,jdbcType=DECIMAL},
+            current_price = #{currentPrice,jdbcType=DECIMAL},
+            current_value = #{currentValue,jdbcType=DECIMAL},
+            unrealized_gain_loss = #{unrealizedGainLoss,jdbcType=DECIMAL},
+            unrealized_return_rate = #{unrealizedReturnRate,jdbcType=DECIMAL},
+            last_purchase_date = #{lastPurchaseDate,jdbcType=TIMESTAMP},
+            updated_at = #{updatedAt,jdbcType=TIMESTAMP}
+        WHERE id = #{id}
+    </update>
+
+    <update id="deletePortfolio" parameterType="Long">
+        UPDATE PORTFOLIOS SET status = 'DELETED', updated_at = SYSDATE
+        WHERE id = #{id}
+    </update>
+
+    <select id="getPortfolioSummaryByUserId" parameterType="Long" resultType="Map">
+        SELECT 
+            COALESCE(COUNT(*), 0) as productCount,
+            COALESCE(SUM(total_invested_amount), 0) as totalInvestedAmount,
+            COALESCE(SUM(current_value), 0) as totalCurrentValue,
+            COALESCE(SUM(unrealized_gain_loss), 0) as totalGainLoss,
+            CASE 
+                WHEN COALESCE(SUM(total_invested_amount), 0) > 0 
+                THEN ROUND((COALESCE(SUM(unrealized_gain_loss), 0) / SUM(total_invested_amount)) * 100, 2)
+                ELSE 0 
+            END as totalReturnRate,
+            MIN(first_purchase_date) as firstInvestmentDate,
+            MAX(last_purchase_date) as lastInvestmentDate
+        FROM PORTFOLIOS 
+        WHERE user_id = #{userId} AND status = 'ACTIVE'
+        HAVING COUNT(*) >= 0
+    </select>
+
+    <select id="getPortfolioAnalysisByUserId" parameterType="Long" resultType="Map">
+        SELECT 
+            product_type,
+            COUNT(*) as productCount,
+            SUM(current_value) as totalValue,
+            SUM(unrealized_gain_loss) as totalGainLoss,
+            CASE 
+                WHEN SUM(total_invested_amount) > 0 
+                THEN ROUND((SUM(unrealized_gain_loss) / SUM(total_invested_amount)) * 100, 2)
+                ELSE 0 
+            END as returnRate
+        FROM PORTFOLIOS 
+        WHERE user_id = #{userId} AND status = 'ACTIVE'
+        GROUP BY product_type
+        ORDER BY totalValue DESC
+    </select>
+
+</mapper>

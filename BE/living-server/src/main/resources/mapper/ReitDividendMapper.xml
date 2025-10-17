@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.living.hana.mapper.ReitDividendMapper">
+
+    <!-- REIT 배당 결과 매핑 -->
+    <resultMap id="ReitDividendResultMap" type="com.living.hana.entity.ReitDividend">
+        <id property="dividendId" column="dividend_id"/>
+        <result property="productCode" column="product_code"/>
+        <result property="dividendYear" column="dividend_year"/>
+        <result property="dividendQuarter" column="dividend_quarter"/>
+        <result property="dividendRate" column="dividend_rate"/>
+        <result property="dividendAmount" column="dividend_amount"/>
+        <result property="basePrice" column="base_price"/>
+        <result property="recordDate" column="record_date"/>
+        <result property="paymentDate" column="payment_date"/>
+        <result property="announcementDate" column="announcement_date"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <!-- REIT 상품의 배당 내역 조회 -->
+    <select id="findByProductCode" parameterType="string" resultMap="ReitDividendResultMap">
+        SELECT dividend_id, product_code, dividend_year, dividend_quarter,
+               dividend_rate, dividend_amount, base_price, record_date, payment_date,
+               announcement_date, created_at
+        FROM reit_dividends
+        WHERE product_code = #{productCode}
+        ORDER BY dividend_year DESC, dividend_quarter DESC NULLS LAST
+    </select>
+
+    <!-- 연도별 배당 내역 조회 -->
+    <select id="findByProductCodeAndYear" resultMap="ReitDividendResultMap">
+        SELECT dividend_id, product_code, dividend_year, dividend_quarter,
+               dividend_rate, dividend_amount, record_date, payment_date,
+               announcement_date, created_at
+        FROM reit_dividends
+        WHERE product_code = #{productCode}
+          AND dividend_year = #{year}
+        ORDER BY dividend_quarter DESC NULLS LAST
+    </select>
+
+    <!-- 특정 연도/분기 배당 내역 조회 -->
+    <select id="findByProductCodeAndYearAndQuarter" resultMap="ReitDividendResultMap">
+        SELECT dividend_id, product_code, dividend_year, dividend_quarter,
+               dividend_rate, dividend_amount, record_date, payment_date,
+               announcement_date, created_at
+        FROM reit_dividends
+        WHERE product_code = #{productCode}
+          AND dividend_year = #{year}
+          AND (
+            (#{quarter} IS NULL AND dividend_quarter IS NULL) OR
+            dividend_quarter = #{quarter}
+          )
+    </select>
+
+    <!-- 배당 ID로 조회 -->
+    <select id="findByDividendId" parameterType="long" resultMap="ReitDividendResultMap">
+        SELECT dividend_id, product_code, dividend_year, dividend_quarter,
+               dividend_rate, dividend_amount, record_date, payment_date,
+               announcement_date, created_at
+        FROM reit_dividends
+        WHERE dividend_id = #{dividendId}
+    </select>
+
+    <!-- 배당 정보 등록 -->
+    <insert id="insertDividend" parameterType="com.living.hana.entity.ReitDividend">
+        <selectKey keyProperty="dividendId" resultType="long" order="BEFORE">
+            SELECT dividend_id_seq.NEXTVAL FROM dual
+        </selectKey>
+        INSERT INTO reit_dividends (
+            dividend_id, product_code, dividend_year, dividend_quarter,
+            dividend_rate, dividend_amount, base_price, record_date, payment_date,
+            announcement_date, created_at
+        ) VALUES (
+            #{dividendId}, #{productCode}, #{dividendYear}, #{dividendQuarter},
+            #{dividendRate}, #{dividendAmount}, #{basePrice}, #{recordDate}, #{paymentDate},
+            #{announcementDate}, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- 배당 정보 수정 -->
+    <update id="updateDividend" parameterType="com.living.hana.entity.ReitDividend">
+        UPDATE reit_dividends SET
+            dividend_year = #{dividendYear},
+            dividend_quarter = #{dividendQuarter},
+            dividend_rate = #{dividendRate},
+            dividend_amount = #{dividendAmount},
+            record_date = #{recordDate},
+            payment_date = #{paymentDate},
+            announcement_date = #{announcementDate}
+        WHERE dividend_id = #{dividendId}
+    </update>
+
+    <!-- 배당 정보 삭제 -->
+    <delete id="deleteDividend" parameterType="long">
+        DELETE FROM reit_dividends
+        WHERE dividend_id = #{dividendId}
+    </delete>
+
+    <!-- 특정 상품의 모든 배당 정보 삭제 -->
+    <delete id="deleteByProductCode" parameterType="string">
+        DELETE FROM reit_dividends
+        WHERE product_code = #{productCode}
+    </delete>
+
+    <!-- 최근 배당 내역 조회 -->
+    <select id="findRecentDividendsByProductCode" resultMap="ReitDividendResultMap">
+        SELECT * FROM (
+            SELECT dividend_id, product_code, dividend_year, dividend_quarter,
+                   dividend_rate, dividend_amount, record_date, payment_date,
+                   announcement_date, created_at
+            FROM reit_dividends
+            WHERE product_code = #{productCode}
+            ORDER BY dividend_year DESC, dividend_quarter DESC NULLS LAST
+        ) WHERE ROWNUM <![CDATA[<=]]> #{limit}
+    </select>
+
+    <!-- 연도별 배당 통계 조회 -->
+    <select id="findDividendSummaryByYear" parameterType="string" resultMap="ReitDividendResultMap">
+        SELECT dividend_year,
+               SUM(dividend_rate) as dividend_rate,
+               SUM(dividend_amount) as dividend_amount,
+               COUNT(*) as dividend_quarter
+        FROM reit_dividends
+        WHERE product_code = #{productCode}
+        GROUP BY dividend_year
+        ORDER BY dividend_year DESC
+    </select>
+
+</mapper>

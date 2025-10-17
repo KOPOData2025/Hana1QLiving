@@ -1,0 +1,295 @@
+{
+  "version": "1.0",
+  "description": "AI 쿼리 정확도 테스트 케이스 - 25개",
+  "totalTests": 25,
+  "categories": {
+    "simple_query": "단순 조회",
+    "conditional": "조건 필터링",
+    "join": "JOIN 쿼리",
+    "aggregate": "집계 쿼리",
+    "complex": "복잡한 쿼리"
+  },
+  "testCases": [
+    {
+      "id": 1,
+      "category": "simple_query",
+      "question": "우리가 가진 모든 오피스텔을 보여줘",
+      "expectedSQL": "SELECT * FROM BUILDINGS",
+      "requiredTables": ["BUILDINGS"],
+      "requiredColumns": ["ID", "NAME", "ADDRESS"],
+      "expectedResultType": "list",
+      "minResults": 1,
+      "weight": 1
+    },
+    {
+      "id": 2,
+      "category": "simple_query",
+      "question": "현재 유효한 계약들을 조회해줘",
+      "expectedSQL": "SELECT * FROM CONTRACTS WHERE STATUS = 'ACTIVE'",
+      "requiredTables": ["CONTRACTS"],
+      "requiredColumns": ["ID", "STATUS"],
+      "expectedEnums": { "STATUS": "ACTIVE" },
+      "expectedResultType": "list",
+      "weight": 1
+    },
+    {
+      "id": 3,
+      "category": "simple_query",
+      "question": "현재 입주 가능한 호실을 보여줘",
+      "expectedSQL": "SELECT * FROM UNITS WHERE STATUS = 'AVAILABLE'",
+      "requiredTables": ["UNITS"],
+      "requiredColumns": ["ID", "STATUS"],
+      "expectedEnums": { "STATUS": "AVAILABLE" },
+      "expectedResultType": "list",
+      "weight": 1
+    },
+    {
+      "id": 4,
+      "category": "simple_query",
+      "question": "모든 사용자 정보를 보고싶어.",
+      "expectedSQL": "SELECT * FROM USERS",
+      "requiredTables": ["USERS"],
+      "requiredColumns": ["ID", "NAME", "EMAIL"],
+      "expectedResultType": "list",
+      "minResults": 1,
+      "weight": 1
+    },
+    {
+      "id": 5,
+      "category": "simple_query",
+      "question": "오피스텔 타입 오피스텔만 조회해줘",
+      "expectedSQL": "SELECT * FROM BUILDINGS WHERE BUILDING_TYPE = 'OFFICETEL'",
+      "requiredTables": ["BUILDINGS"],
+      "requiredColumns": ["ID", "NAME", "BUILDING_TYPE"],
+      "expectedEnums": { "BUILDING_TYPE": "OFFICETEL" },
+      "expectedResultType": "list",
+      "weight": 1
+    },
+    {
+      "id": 6,
+      "category": "conditional",
+      "question": "서울에 있는 오피스텔을 찾아줘",
+      "expectedSQL": "SELECT * FROM BUILDINGS WHERE CITY LIKE '%서울%' OR ADDRESS LIKE '%서울%'",
+      "requiredTables": ["BUILDINGS"],
+      "requiredColumns": ["CITY", "ADDRESS"],
+      "expectedResultType": "list",
+      "weight": 2
+    },
+    {
+      "id": 7,
+      "category": "conditional",
+      "question": "월세가 50만원 이하인 호실만 조회해줘",
+      "expectedSQL": "SELECT * FROM UNITS WHERE MONTHLY_RENT <= 500000",
+      "requiredTables": ["UNITS"],
+      "requiredColumns": ["MONTHLY_RENT"],
+      "expectedResultType": "list",
+      "weight": 2
+    },
+    {
+      "id": 8,
+      "category": "conditional",
+      "question": "보증금이 1000만원 이상인 호실을 조회해줘.",
+      "expectedSQL": "SELECT * FROM UNITS WHERE DEPOSIT >= 10000000",
+      "requiredTables": ["UNITS"],
+      "requiredColumns": ["DEPOSIT"],
+      "expectedResultType": "list",
+      "weight": 2
+    },
+    {
+      "id": 9,
+      "category": "conditional",
+      "question": "2026년에 만료되는 계약을 찾아줘",
+      "expectedSQL": "SELECT * FROM CONTRACTS WHERE END_DATE LIKE '2026%' OR END_DATE BETWEEN '2026-01-01' AND '2026-12-31'",
+      "requiredTables": ["CONTRACTS"],
+      "requiredColumns": ["END_DATE"],
+      "expectedResultType": "list",
+      "weight": 2
+    },
+    {
+      "id": 10,
+      "category": "conditional",
+      "question": "10층 이상 오피스텔을 조회해줘",
+      "expectedSQL": "SELECT * FROM BUILDINGS WHERE TOTAL_FLOORS >= 10",
+      "requiredTables": ["BUILDINGS"],
+      "requiredColumns": ["TOTAL_FLOORS"],
+      "expectedResultType": "list",
+      "weight": 2
+    },
+    {
+      "id": 11,
+      "category": "join",
+      "question": "계약 정보와 계약자 이름을 함께 보여줘",
+      "expectedSQL": "SELECT C.*, U.NAME FROM CONTRACTS C JOIN USERS U ON C.USER_ID = U.ID",
+      "requiredTables": ["CONTRACTS", "USERS"],
+      "requiredJoins": [{ "table1": "CONTRACTS", "table2": "USERS" }],
+      "requiredColumns": ["NAME"],
+      "expectedResultType": "list",
+      "weight": 3
+    },
+    {
+      "id": 12,
+      "category": "join",
+      "question": "호실 정보와 해당 건물 이름을 같이 조회해줘",
+      "expectedSQL": "SELECT U.*, B.NAME FROM UNITS U JOIN BUILDINGS B ON U.BUILDING_ID = B.ID",
+      "requiredTables": ["UNITS", "BUILDINGS"],
+      "requiredJoins": [{ "table1": "UNITS", "table2": "BUILDINGS" }],
+      "expectedResultType": "list",
+      "weight": 3
+    },
+    {
+      "id": 13,
+      "category": "join",
+      "question": "계약과 호실, 오피스텔 정보를 모두 포함해서 조회해줘",
+      "expectedSQL": "SELECT C.*, U.UNIT_NUMBER, B.NAME FROM CONTRACTS C JOIN UNITS U ON C.UNIT_ID = U.ID JOIN BUILDINGS B ON U.BUILDING_ID = B.ID",
+      "requiredTables": ["CONTRACTS", "UNITS", "BUILDINGS"],
+      "requiredJoins": [
+        { "table1": "CONTRACTS", "table2": "UNITS" },
+        { "table1": "UNITS", "table2": "BUILDINGS" }
+      ],
+      "expectedResultType": "list",
+      "weight": 3
+    },
+    {
+      "id": 14,
+      "category": "join",
+      "question": "결제 내역과 계약자 정보를 함께 조회",
+      "expectedSQL": "SELECT P.*, U.NAME FROM PAYMENTS P JOIN CONTRACTS C ON P.CONTRACT_ID = C.ID JOIN USERS U ON C.USER_ID = U.ID",
+      "requiredTables": ["PAYMENTS", "CONTRACTS", "USERS"],
+      "requiredJoins": [
+        { "table1": "PAYMENTS", "table2": "CONTRACTS" },
+        { "table1": "CONTRACTS", "table2": "USERS" }
+      ],
+      "expectedResultType": "list",
+      "weight": 3
+    },
+    {
+      "id": 15,
+      "category": "join",
+      "question": "방문 예약 정보와 사용자, 호실 정보를 함께 보여줘",
+      "expectedSQL": "SELECT R.*, U.NAME, UNITS.UNIT_NUMBER FROM RESERVATIONS R JOIN USERS U ON R.ID = U.ID JOIN UNITS ON R.UNIT_ID = UNITS.ID",
+      "requiredTables": ["RESERVATIONS", "USERS", "UNITS"],
+      "requiredJoins": [
+        { "table1": "RESERVATIONS", "table2": "USERS" },
+        { "table1": "RESERVATIONS", "table2": "UNITS" }
+      ],
+      "expectedResultType": "list",
+      "weight": 3
+    },
+    {
+      "id": 16,
+      "category": "aggregate",
+      "question": "오피스텔별 총 호실 수를 계산해줘",
+      "expectedSQL": "SELECT BUILDING_ID, COUNT(*) as UNIT_COUNT FROM UNITS GROUP BY BUILDING_ID",
+      "requiredTables": ["UNITS"],
+      "requiredAggregates": ["COUNT"],
+      "requiredGroupBy": ["BUILDING_ID"],
+      "expectedResultType": "aggregate",
+      "weight": 3
+    },
+    {
+      "id": 17,
+      "category": "aggregate",
+      "question": "월별 계약 건수를 집계해줘",
+      "expectedSQL": "SELECT SUBSTR(START_DATE, 1, 7) as MONTH, COUNT(*) FROM CONTRACTS GROUP BY SUBSTR(START_DATE, 1, 7)",
+      "requiredTables": ["CONTRACTS"],
+      "requiredAggregates": ["COUNT"],
+      "expectedResultType": "aggregate",
+      "weight": 3
+    },
+    {
+      "id": 18,
+      "category": "aggregate",
+      "question": "오피스텔별 평균 월세를 계산해줘",
+      "expectedSQL": "SELECT BUILDING_ID, AVG(MONTHLY_RENT) FROM UNITS GROUP BY BUILDING_ID",
+      "requiredTables": ["UNITS"],
+      "requiredAggregates": ["AVG"],
+      "requiredGroupBy": ["BUILDING_ID"],
+      "expectedResultType": "aggregate",
+      "weight": 3
+    },
+    {
+      "id": 19,
+      "category": "aggregate",
+      "question": "상태별 계약 개수를 세어줘",
+      "expectedSQL": "SELECT STATUS, COUNT(*) FROM CONTRACTS GROUP BY STATUS",
+      "requiredTables": ["CONTRACTS"],
+      "requiredAggregates": ["COUNT"],
+      "requiredGroupBy": ["STATUS"],
+      "expectedResultType": "aggregate",
+      "weight": 3
+    },
+    {
+      "id": 20,
+      "category": "aggregate",
+      "question": "가장 높은 월세를 보여줘",
+      "expectedSQL": "SELECT MAX(MONTHLY_RENT) FROM UNITS",
+      "requiredTables": ["UNITS"],
+      "requiredAggregates": ["MAX"],
+      "expectedResultType": "single_value",
+      "weight": 3
+    },
+    {
+      "id": 21,
+      "category": "complex",
+      "question": "서울에 있는 오피스텔 중 사용 가능한 호실과 오피스텔 정보를 함께 보여줘",
+      "expectedSQL": "SELECT U.*, B.NAME, B.ADDRESS FROM UNITS U JOIN BUILDINGS B ON U.BUILDING_ID = B.ID WHERE U.STATUS = 'AVAILABLE' AND (B.CITY LIKE '%서울%' OR B.ADDRESS LIKE '%서울%') AND B.BUILDING_TYPE = 'OFFICETEL'",
+      "requiredTables": ["UNITS", "BUILDINGS"],
+      "requiredJoins": [{ "table1": "UNITS", "table2": "BUILDINGS" }],
+      "expectedEnums": { "STATUS": "AVAILABLE", "BUILDING_TYPE": "OFFICETEL" },
+      "expectedResultType": "list",
+      "weight": 4
+    },
+    {
+      "id": 22,
+      "category": "complex",
+      "question": "2026년에 만료되는 계약 중 월세가 50만원 이상인 계약자 정보를 알려줘",
+      "expectedSQL": "SELECT U.NAME, U.EMAIL, C.END_DATE, C.MONTHLY_RENT FROM CONTRACTS C JOIN USERS U ON C.USER_ID = U.ID WHERE C.END_DATE LIKE '2026%' AND C.MONTHLY_RENT >= 500000",
+      "requiredTables": ["CONTRACTS", "USERS"],
+      "requiredJoins": [{ "table1": "CONTRACTS", "table2": "USERS" }],
+      "expectedResultType": "list",
+      "weight": 4
+    },
+    {
+      "id": 23,
+      "category": "complex",
+      "question": "건물별로 유효한 계약 수와 총 호실 수를 비교해서 보여줘",
+      "expectedSQL": "SELECT B.NAME, COUNT(DISTINCT U.ID) as TOTAL_UNITS, COUNT(DISTINCT C.ID) as ACTIVE_CONTRACTS FROM BUILDINGS B LEFT JOIN UNITS U ON B.ID = U.BUILDING_ID LEFT JOIN CONTRACTS C ON U.ID = C.UNIT_ID AND C.STATUS = 'ACTIVE' GROUP BY B.ID, B.NAME",
+      "requiredTables": ["BUILDINGS", "UNITS", "CONTRACTS"],
+      "requiredAggregates": ["COUNT"],
+      "requiredGroupBy": ["ID", "NAME"],
+      "expectedResultType": "aggregate",
+      "weight": 4
+    },
+    {
+      "id": 24,
+      "category": "complex",
+      "question": "미납된 결제 내역과 해당 계약자, 오피스텔 정보를 모두 포함해서 조회해줘",
+      "expectedSQL": "SELECT P.*, U.NAME, B.NAME as BUILDING_NAME FROM PAYMENTS P JOIN CONTRACTS C ON P.CONTRACT_ID = C.ID JOIN USERS U ON C.USER_ID = U.ID JOIN UNITS UN ON C.UNIT_ID = UN.ID JOIN BUILDINGS B ON UN.BUILDING_ID = B.ID WHERE P.STATUS = 'PENDING' OR P.STATUS = 'OVERDUE'",
+      "requiredTables": [
+        "PAYMENTS",
+        "CONTRACTS",
+        "USERS",
+        "UNITS",
+        "BUILDINGS"
+      ],
+      "requiredJoins": [
+        { "table1": "PAYMENTS", "table2": "CONTRACTS" },
+        { "table1": "CONTRACTS", "table2": "USERS" }
+      ],
+      "expectedEnums": { "STATUS": ["PENDING", "OVERDUE"] },
+      "expectedResultType": "list",
+      "weight": 4
+    },
+    {
+      "id": 25,
+      "category": "complex",
+      "question": "각 건물에서 평균 월세보다 높은 호실의 개수를 오피스텔별로 계산해줘",
+      "expectedSQL": "SELECT B.NAME, COUNT(*) FROM UNITS U JOIN BUILDINGS B ON U.BUILDING_ID = B.ID WHERE U.MONTHLY_RENT > (SELECT AVG(MONTHLY_RENT) FROM UNITS WHERE BUILDING_ID = U.BUILDING_ID) GROUP BY B.ID, B.NAME",
+      "requiredTables": ["UNITS", "BUILDINGS"],
+      "requiredAggregates": ["COUNT", "AVG"],
+      "hasSubquery": true,
+      "expectedResultType": "aggregate",
+      "weight": 4
+    }
+  ]
+}

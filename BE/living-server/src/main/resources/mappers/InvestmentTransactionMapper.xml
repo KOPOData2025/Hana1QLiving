@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.living.hana.mapper.InvestmentTransactionMapper">
+    
+    <resultMap id="InvestmentTransactionResultMap" type="com.living.hana.entity.InvestmentTransaction">
+        <id property="transactionId" column="TRANSACTION_ID"/>
+        <result property="userId" column="USER_ID"/>
+        <result property="userCi" column="USER_CI"/>
+        <result property="productId" column="PRODUCT_ID"/>
+        <result property="orderId" column="ORDER_ID"/>
+        <result property="transactionType" column="TRANSACTION_TYPE"/>
+        <result property="quantity" column="QUANTITY"/>
+        <result property="unitPrice" column="UNIT_PRICE"/>
+        <result property="transactionAmount" column="TRANSACTION_AMOUNT"/>
+        <result property="fees" column="FEES"/>
+        <result property="tax" column="TAX"/>
+        <result property="netAmount" column="NET_AMOUNT"/>
+        <result property="transactionDate" column="TRANSACTION_DATE"/>
+        <result property="settlementDate" column="SETTLEMENT_DATE"/>
+        <result property="status" column="STATUS"/>
+        <result property="channel" column="CHANNEL"/>
+        <result property="brokerOrderId" column="BROKER_ORDER_ID"/>
+        <result property="errorMessage" column="ERROR_MESSAGE"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+        <!-- 조인용 필드 -->
+        <result property="productName" column="PRODUCT_NAME"/>
+        <result property="productCode" column="PRODUCT_CODE"/>
+        <result property="productType" column="PRODUCT_TYPE"/>
+    </resultMap>
+    
+    <insert id="insertTransaction" parameterType="com.living.hana.entity.InvestmentTransaction">
+        <selectKey keyProperty="transactionId" resultType="Long" order="BEFORE">
+            SELECT SEQ_TRANSACTION_ID.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO INVESTMENT_TRANSACTIONS (
+            TRANSACTION_ID, USER_ID, USER_CI, PRODUCT_ID, ORDER_ID, TRANSACTION_TYPE,
+            QUANTITY, UNIT_PRICE, TRANSACTION_AMOUNT, FEES, TAX, NET_AMOUNT,
+            TRANSACTION_DATE, SETTLEMENT_DATE, STATUS, CHANNEL, BROKER_ORDER_ID, ERROR_MESSAGE
+        ) VALUES (
+            #{transactionId}, #{userId}, #{userCi}, #{productId}, #{orderId}, #{transactionType},
+            #{quantity}, #{unitPrice}, #{transactionAmount}, #{fees}, #{tax}, #{netAmount},
+            #{transactionDate}, #{settlementDate}, #{status}, #{channel}, #{brokerOrderId}, #{errorMessage}
+        )
+    </insert>
+    
+    <select id="findTransactionById" parameterType="Long" resultMap="InvestmentTransactionResultMap">
+        SELECT it.*, rp.PRODUCT_NAME, rp.PRODUCT_ID AS PRODUCT_CODE, rp.PRODUCT_TYPE
+        FROM INVESTMENT_TRANSACTIONS it
+        JOIN REITS_PRODUCTS rp ON it.PRODUCT_ID = rp.PRODUCT_ID
+        WHERE it.TRANSACTION_ID = #{transactionId}
+    </select>
+    
+    <select id="findTransactionByOrderId" parameterType="String" resultMap="InvestmentTransactionResultMap">
+        SELECT it.*, rp.PRODUCT_NAME, rp.PRODUCT_ID AS PRODUCT_CODE, rp.PRODUCT_TYPE
+        FROM INVESTMENT_TRANSACTIONS it
+        JOIN REITS_PRODUCTS rp ON it.PRODUCT_ID = rp.PRODUCT_ID
+        WHERE it.ORDER_ID = #{orderId}
+    </select>
+    
+    <select id="findTransactionsByUserId" parameterType="Long" resultMap="InvestmentTransactionResultMap">
+        SELECT it.*, rp.PRODUCT_NAME, rp.PRODUCT_ID AS PRODUCT_CODE, rp.PRODUCT_TYPE
+        FROM INVESTMENT_TRANSACTIONS it
+        JOIN REITS_PRODUCTS rp ON it.PRODUCT_ID = rp.PRODUCT_ID
+        WHERE it.USER_ID = #{userId}
+        ORDER BY it.TRANSACTION_DATE DESC
+    </select>
+    
+    <select id="findTransactionsByUserAndProduct" resultMap="InvestmentTransactionResultMap">
+        SELECT it.*, rp.PRODUCT_NAME, rp.PRODUCT_ID AS PRODUCT_CODE, rp.PRODUCT_TYPE
+        FROM INVESTMENT_TRANSACTIONS it
+        JOIN REITS_PRODUCTS rp ON it.PRODUCT_ID = rp.PRODUCT_ID
+        WHERE it.USER_ID = #{userId}
+        AND it.PRODUCT_ID = #{productId}
+        ORDER BY it.TRANSACTION_DATE DESC
+    </select>
+    
+    <select id="findTransactionsByUserAndType" resultMap="InvestmentTransactionResultMap">
+        SELECT it.*, rp.PRODUCT_NAME, rp.PRODUCT_ID AS PRODUCT_CODE, rp.PRODUCT_TYPE
+        FROM INVESTMENT_TRANSACTIONS it
+        JOIN REITS_PRODUCTS rp ON it.PRODUCT_ID = rp.PRODUCT_ID
+        WHERE it.USER_ID = #{userId}
+        AND it.TRANSACTION_TYPE = #{transactionType}
+        ORDER BY it.TRANSACTION_DATE DESC
+    </select>
+    
+    <select id="findTransactionsByUserAndStatus" resultMap="InvestmentTransactionResultMap">
+        SELECT it.*, rp.PRODUCT_NAME, rp.PRODUCT_ID AS PRODUCT_CODE, rp.PRODUCT_TYPE
+        FROM INVESTMENT_TRANSACTIONS it
+        JOIN REITS_PRODUCTS rp ON it.PRODUCT_ID = rp.PRODUCT_ID
+        WHERE it.USER_ID = #{userId}
+        AND it.STATUS = #{status}
+        ORDER BY it.TRANSACTION_DATE DESC
+    </select>
+    
+    <select id="findTransactionsByDateRange" resultMap="InvestmentTransactionResultMap">
+        SELECT it.*, rp.PRODUCT_NAME, rp.PRODUCT_ID AS PRODUCT_CODE, rp.PRODUCT_TYPE
+        FROM INVESTMENT_TRANSACTIONS it
+        JOIN REITS_PRODUCTS rp ON it.PRODUCT_ID = rp.PRODUCT_ID
+        WHERE it.USER_ID = #{userId}
+        AND it.TRANSACTION_DATE BETWEEN #{startDate} AND #{endDate}
+        ORDER BY it.TRANSACTION_DATE DESC
+    </select>
+    
+    <select id="findPendingTransactions" parameterType="Long" resultMap="InvestmentTransactionResultMap">
+        SELECT it.*, rp.PRODUCT_NAME, rp.PRODUCT_ID AS PRODUCT_CODE, rp.PRODUCT_TYPE
+        FROM INVESTMENT_TRANSACTIONS it
+        JOIN REITS_PRODUCTS rp ON it.PRODUCT_ID = rp.PRODUCT_ID
+        WHERE it.USER_ID = #{userId}
+        AND it.STATUS = 'PENDING'
+        ORDER BY it.TRANSACTION_DATE ASC
+    </select>
+    
+    <update id="updateTransactionStatus">
+        UPDATE INVESTMENT_TRANSACTIONS
+        SET STATUS = #{status},
+            <if test="brokerOrderId != null">
+                BROKER_ORDER_ID = #{brokerOrderId},
+            </if>
+            <if test="errorMessage != null">
+                ERROR_MESSAGE = #{errorMessage},
+            </if>
+            UPDATED_AT = CURRENT_TIMESTAMP
+        WHERE TRANSACTION_ID = #{transactionId}
+    </update>
+    
+    <update id="updateTransactionToSettled">
+        UPDATE INVESTMENT_TRANSACTIONS
+        SET STATUS = 'SETTLED',
+            SETTLEMENT_DATE = #{settlementDate},
+            UPDATED_AT = CURRENT_TIMESTAMP
+        WHERE TRANSACTION_ID = #{transactionId}
+        AND STATUS = 'CONFIRMED'
+    </update>
+    
+    <select id="getTransactionSummaryByUser" parameterType="Long" resultType="java.util.Map">
+        SELECT 
+            it.TRANSACTION_TYPE,
+            COUNT(*) as transactionCount,
+            SUM(it.QUANTITY) as totalQuantity,
+            SUM(it.TRANSACTION_AMOUNT) as totalAmount,
+            SUM(it.FEES) as totalFees,
+            SUM(it.TAX) as totalTax,
+            SUM(it.NET_AMOUNT) as totalNetAmount
+        FROM INVESTMENT_TRANSACTIONS it
+        WHERE it.USER_ID = #{userId}
+        AND it.STATUS IN ('CONFIRMED', 'SETTLED')
+        GROUP BY it.TRANSACTION_TYPE
+        ORDER BY it.TRANSACTION_TYPE
+    </select>
+    
+    <select id="getMonthlyTransactionSummary" resultType="java.util.Map">
+        SELECT 
+            EXTRACT(MONTH FROM it.TRANSACTION_DATE) as month,
+            it.TRANSACTION_TYPE,
+            COUNT(*) as transactionCount,
+            SUM(it.TRANSACTION_AMOUNT) as totalAmount,
+            SUM(it.NET_AMOUNT) as totalNetAmount
+        FROM INVESTMENT_TRANSACTIONS it
+        WHERE it.USER_ID = #{userId}
+        AND EXTRACT(YEAR FROM it.TRANSACTION_DATE) = #{year}
+        AND it.STATUS IN ('CONFIRMED', 'SETTLED')
+        GROUP BY EXTRACT(MONTH FROM it.TRANSACTION_DATE), it.TRANSACTION_TYPE
+        ORDER BY month, it.TRANSACTION_TYPE
+    </select>
+    
+    <select id="findRecentTransactions" resultMap="InvestmentTransactionResultMap">
+        SELECT it.*, rp.PRODUCT_NAME, rp.PRODUCT_ID AS PRODUCT_CODE, rp.PRODUCT_TYPE
+        FROM INVESTMENT_TRANSACTIONS it
+        JOIN REITS_PRODUCTS rp ON it.PRODUCT_ID = rp.PRODUCT_ID
+        WHERE it.USER_ID = #{userId}
+        ORDER BY it.TRANSACTION_DATE DESC
+        <if test="limit > 0">
+            FETCH FIRST #{limit} ROWS ONLY
+        </if>
+    </select>
+    
+    <select id="countTransactionsByUserAndStatus" resultType="int">
+        SELECT COUNT(*)
+        FROM INVESTMENT_TRANSACTIONS
+        WHERE USER_ID = #{userId}
+        AND STATUS = #{status}
+    </select>
+    
+    <select id="findTransactionsForSettlement" parameterType="java.time.LocalDate" resultMap="InvestmentTransactionResultMap">
+        SELECT it.*, rp.PRODUCT_NAME, rp.PRODUCT_ID AS PRODUCT_CODE, rp.PRODUCT_TYPE
+        FROM INVESTMENT_TRANSACTIONS it
+        JOIN REITS_PRODUCTS rp ON it.PRODUCT_ID = rp.PRODUCT_ID
+        WHERE it.SETTLEMENT_DATE = #{targetDate}
+        AND it.STATUS = 'CONFIRMED'
+        ORDER BY it.TRANSACTION_DATE
+    </select>
+    
+    <select id="findTransactionsByUserCi" parameterType="String" resultMap="InvestmentTransactionResultMap">
+        SELECT it.*
+        FROM INVESTMENT_TRANSACTIONS it
+        WHERE it.USER_CI = #{userCi}
+        AND it.STATUS IN ('CONFIRMED', 'SETTLED')
+        ORDER BY it.TRANSACTION_DATE DESC
+    </select>
+    
+</mapper>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.hana_bank.mapper.LoanMapper">
+    
+    <resultMap id="loanResultMap" type="com.example.hana_bank.entity.Loan">
+        <id property="loanId" column="loan_id"/>
+        <result property="userCi" column="user_ci"/>
+        <result property="productId" column="product_id"/>
+        <result property="loanAmount" column="loan_amount"/>
+        <result property="interestRate" column="interest_rate"/>
+        <result property="loanPeriod" column="loan_period"/>
+        <result property="remainingAmount" column="remaining_amount"/>
+        <result property="startDate" column="start_date"/>
+        <result property="endDate" column="end_date"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+    
+    <insert id="insertLoan" parameterType="com.example.hana_bank.entity.Loan">
+        <selectKey keyProperty="loanId" resultType="long" order="BEFORE">
+            SELECT LOAN_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO loans (
+            loan_id, user_ci, product_id, loan_amount, interest_rate, 
+            loan_period, remaining_amount, start_date, end_date, 
+            status, created_at, updated_at
+        ) VALUES (
+            #{loanId}, #{userCi}, #{productId}, #{loanAmount}, #{interestRate},
+            #{loanPeriod}, #{remainingAmount}, #{startDate}, #{endDate},
+            #{status}, SYSDATE, SYSDATE
+        )
+    </insert>
+    
+    <select id="findById" parameterType="long" resultMap="loanResultMap">
+        SELECT * FROM loans WHERE loan_id = #{loanId}
+    </select>
+    
+    <select id="findByUserCi" parameterType="string" resultMap="loanResultMap">
+        SELECT * FROM loans WHERE user_ci = #{userCi} ORDER BY created_at DESC
+    </select>
+    
+    <select id="findAll" resultMap="loanResultMap">
+        SELECT * FROM loans ORDER BY created_at DESC
+    </select>
+    
+    <select id="findByStatus" parameterType="string" resultMap="loanResultMap">
+        SELECT * FROM loans WHERE status = #{status} ORDER BY created_at DESC
+    </select>
+    
+    <update id="updateLoan" parameterType="com.example.hana_bank.entity.Loan">
+        UPDATE loans SET
+            remaining_amount = #{remainingAmount},
+            status = #{status},
+            updated_at = SYSDATE
+        WHERE loan_id = #{loanId}
+    </update>
+    
+    <delete id="deleteLoan" parameterType="long">
+        DELETE FROM loans WHERE loan_id = #{loanId}
+    </delete>
+    
+</mapper>

@@ -1,0 +1,241 @@
+# ==============================================================================
+# HanaSecurities - Multi-Project Repository .gitignore
+# Spring Boot + React Native + React Web 멀티 프로젝트 설정
+# ==============================================================================
+
+# ==============================================================================
+# Java/Spring Boot 관련
+# ==============================================================================
+HELP.md
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# ==============================================================================
+# Node.js/React/React Native 관련
+# ==============================================================================
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Production builds
+build/
+dist/
+.next/
+out/
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ==============================================================================
+# Expo/React Native 관련
+# ==============================================================================
+# Expo
+.expo/
+.expo-shared/
+dist/
+web-build/
+
+# Metro bundler
+.metro-health-check*
+
+# React Native
+*.hprof
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Android
+*.ap_
+*.aab
+*.apk
+/android/app/debug
+/android/app/release
+
+# iOS
+ios/Pods/
+ios/build/
+ios/.xcode.env.local
+
+# ==============================================================================
+# IDE 및 에디터 설정
+# ==============================================================================
+### VS Code ###
+.vscode/
+
+### WebStorm/PhpStorm ###
+.idea/
+
+# ==============================================================================
+# 보안 관련 (매우 중요!)
+# ==============================================================================
+# GCP 인증 정보
+src/main/resources/clear-nebula-*.json
+clear-nebula-*.json
+**/clear-nebula-*.json
+
+# 환경 설정 파일
+.env
+.env.local
+.env.development
+.env.staging
+.env.production
+.env.test
+
+# API 키 및 비밀 정보
+config/secrets.yml
+application-secret.yml
+application-*.properties
+!application.properties
+!application.yml
+
+# ==============================================================================
+# 로그 및 캐시
+# ==============================================================================
+# 로그 파일
+*.log
+logs/
+log/
+
+# 캐시
+.cache/
+.parcel-cache/
+.eslintcache
+
+# ==============================================================================
+# 임시 파일 및 백업
+# ==============================================================================
+# 임시 파일
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# 백업 파일
+*.bak
+*.backup
+*.orig
+
+# ==============================================================================
+# OS 생성 파일
+# ==============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# ==============================================================================
+# 데이터베이스 및 데이터 파일
+# ==============================================================================
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# H2 Database
+*.h2.db
+*.mv.db
+*.trace.db
+
+# ==============================================================================
+# 테스트 및 커버리지
+# ==============================================================================
+# Test coverage
+coverage/
+*.lcov
+.nyc_output
+
+# Jest
+coverage/
+
+# ==============================================================================
+# Docker 관련
+# ==============================================================================
+# Docker
+.dockerignore
+
+# ==============================================================================
+# Task Master AI 관련 (개발 워크플로우)
+# ==============================================================================
+.taskmaster/config.json
+.taskmaster/reports/
+
+# ==============================================================================
+# 기타 개발 도구
+# ==============================================================================
+# ESLint
+.eslintcache
+
+# Prettier
+.prettierignore
+
+# TypeScript
+*.tsbuildinfo
+
+# 번들러 캐시
+.rollup.cache/
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# ==============================================================================
+# 프로젝트별 특수 파일
+# ==============================================================================
+# 하나은행/하나원큐리빙 특수 설정 (필요시 추가)
+
+# 배포 관련 임시 파일
+deploy/
+deployment/
+
+# 문서 생성 임시 파일
+docs/generated/

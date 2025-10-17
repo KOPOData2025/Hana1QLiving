@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.living.hana.mapper.ReservationMapper">
+
+    <resultMap id="ReservationResultMap" type="com.living.hana.entity.Reservation">
+        <id column="ID" property="id"/>
+        <result column="BUILDING_ID" property="buildingId"/>
+        <result column="UNIT_ID" property="unitId"/>
+        <result column="NAME" property="name"/>
+        <result column="EMAIL" property="email"/>
+        <result column="PHONE" property="phone"/>
+        <result column="AGE" property="age"/>
+        <result column="OCCUPATION" property="occupation"/>
+        <result column="CURRENT_RESIDENCE" property="currentResidence"/>
+        <result column="MOVE_IN_DATE" property="moveInDate"/>
+        <result column="RESIDENCE_PERIOD" property="residencePeriod"/>
+        <result column="STATUS" property="status"/>
+        <result column="CREATED_AT" property="createdAt"/>
+        <result column="UPDATED_AT" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="ReservationResultMap">
+        SELECT * FROM RESERVATIONS ORDER BY CREATED_AT DESC
+    </select>
+
+    <select id="findById" resultMap="ReservationResultMap">
+        SELECT * FROM RESERVATIONS WHERE ID = #{id}
+    </select>
+
+    <select id="findByUnitId" resultMap="ReservationResultMap">
+        SELECT * FROM RESERVATIONS WHERE UNIT_ID = #{unitId} ORDER BY CREATED_AT DESC
+    </select>
+
+    <insert id="insert" parameterType="com.living.hana.entity.Reservation">
+        INSERT INTO RESERVATIONS (BUILDING_ID, UNIT_ID, NAME, EMAIL, PHONE, AGE, OCCUPATION, 
+                                CURRENT_RESIDENCE, MOVE_IN_DATE, RESIDENCE_PERIOD, STATUS, CREATED_AT, UPDATED_AT)
+        VALUES (#{buildingId}, #{unitId}, #{name}, #{email}, #{phone}, #{age}, #{occupation}, 
+                #{currentResidence}, #{moveInDate}, #{residencePeriod}, #{status}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE RESERVATIONS SET STATUS = #{status}, UPDATED_AT = SYSDATE WHERE ID = #{id}
+    </update>
+
+    <update id="update" parameterType="com.living.hana.entity.Reservation">
+        UPDATE RESERVATIONS SET 
+            BUILDING_ID = #{buildingId},
+            UNIT_ID = #{unitId},
+            NAME = #{name},
+            EMAIL = #{email},
+            PHONE = #{phone},
+            AGE = #{age},
+            OCCUPATION = #{occupation},
+            CURRENT_RESIDENCE = #{currentResidence},
+            MOVE_IN_DATE = #{moveInDate},
+            RESIDENCE_PERIOD = #{residencePeriod},
+            STATUS = #{status},
+            UPDATED_AT = SYSDATE
+        WHERE ID = #{id}
+    </update>
+
+</mapper>

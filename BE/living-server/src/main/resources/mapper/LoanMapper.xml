@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.living.hana.mapper.LoanMapper">
+
+    <resultMap id="LoanResultMap" type="com.living.hana.entity.Loan">
+        <id column="ID" property="id"/>
+        <result column="USER_ID" property="userId"/>
+        <result column="CONTRACT_ID" property="contractId"/>
+        <result column="APPLICATION_ID" property="applicationId"/>
+        <result column="LOAN_NUMBER" property="loanNumber"/>
+        <result column="LOAN_AMOUNT" property="loanAmount"/>
+        <result column="MAX_AMOUNT" property="maxAmount"/>
+        <result column="INTEREST_RATE" property="interestRate"/>
+        <result column="LOAN_TERM" property="loanTerm"/>
+        <result column="START_DATE" property="startDate"/>
+        <result column="END_DATE" property="endDate"/>
+        <result column="STATUS" property="status"/>
+        <result column="BANK_NAME" property="bankName"/>
+        <result column="DESIRED_EXECUTION_DATE" property="desiredExecutionDate"/>
+        <result column="ACTUAL_EXECUTION_DATE" property="actualExecutionDate"/>
+        <result column="LANDLORD_ACCOUNT_NUMBER" property="landlordAccountNumber"/>
+        <result column="LANDLORD_BANK_CODE" property="landlordBankCode"/>
+        <result column="LANDLORD_ACCOUNT_HOLDER" property="landlordAccountHolder"/>
+        <result column="EXECUTION_STATUS" property="executionStatus"/>
+        <result column="CONTRACT_FILE_PATH" property="contractFilePath"/>
+        <result column="TRANSACTION_ID" property="transactionId"/>
+        <result column="EXECUTION_RESULT_MESSAGE" property="executionResultMessage"/>
+        <result column="CREATED_AT" property="createdAt"/>
+        <result column="UPDATED_AT" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="LoanResultMap">
+        SELECT * FROM LOANS ORDER BY ID
+    </select>
+
+    <select id="findById" resultMap="LoanResultMap">
+        SELECT * FROM LOANS WHERE ID = #{id}
+    </select>
+
+    <select id="findByUserId" resultMap="LoanResultMap">
+        SELECT * FROM LOANS WHERE USER_ID = #{userId} ORDER BY START_DATE DESC
+    </select>
+
+    <select id="findByContractId" resultMap="LoanResultMap">
+        SELECT * FROM LOANS WHERE CONTRACT_ID = #{contractId} ORDER BY START_DATE DESC
+    </select>
+
+    <select id="findByStatus" resultMap="LoanResultMap">
+        SELECT * FROM LOANS WHERE STATUS = #{status} ORDER BY ID
+    </select>
+
+    <select id="findByApplicationId" resultMap="LoanResultMap">
+        SELECT * FROM LOANS WHERE APPLICATION_ID = #{applicationId}
+    </select>
+
+    <insert id="insert" parameterType="com.living.hana.entity.Loan">
+        INSERT INTO LOANS (USER_ID, CONTRACT_ID, APPLICATION_ID, LOAN_NUMBER, LOAN_AMOUNT, MAX_AMOUNT, INTEREST_RATE, LOAN_TERM, START_DATE, END_DATE, STATUS, BANK_NAME, CREATED_AT, UPDATED_AT)
+        VALUES (#{userId}, #{contractId}, #{applicationId}, #{loanNumber}, #{loanAmount}, #{maxAmount}, #{interestRate}, #{loanTerm}, #{startDate}, #{endDate}, #{status}, #{bankName}, SYSDATE, SYSDATE)
+    </insert>
+
+    <update id="update" parameterType="com.living.hana.entity.Loan">
+        UPDATE LOANS SET 
+            USER_ID = #{userId},
+            CONTRACT_ID = #{contractId},
+            APPLICATION_ID = #{applicationId},
+            LOAN_NUMBER = #{loanNumber},
+            LOAN_AMOUNT = #{loanAmount},
+            MAX_AMOUNT = #{maxAmount},
+            INTEREST_RATE = #{interestRate},
+            LOAN_TERM = #{loanTerm},
+            START_DATE = #{startDate},
+            END_DATE = #{endDate},
+            STATUS = #{status},
+            BANK_NAME = #{bankName},
+            UPDATED_AT = SYSDATE
+        WHERE ID = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM LOANS WHERE ID = #{id}
+    </delete>
+
+    <!-- 대출 실행 관련 쿼리 -->
+    <select id="findReadyForExecution" resultMap="LoanResultMap">
+        SELECT * FROM LOANS 
+        WHERE EXECUTION_STATUS = 'READY' 
+        AND STATUS = 'APPROVED'
+        AND TO_DATE(DESIRED_EXECUTION_DATE, 'YYYY-MM-DD') &lt;= SYSDATE
+        ORDER BY DESIRED_EXECUTION_DATE
+    </select>
+
+    <select id="findByExecutionStatus" resultMap="LoanResultMap">
+        SELECT * FROM LOANS 
+        WHERE EXECUTION_STATUS = #{executionStatus} 
+        ORDER BY DESIRED_EXECUTION_DATE
+    </select>
+
+    <update id="updateExecutionInfo">
+        UPDATE LOANS SET 
+            DESIRED_EXECUTION_DATE = #{desiredExecutionDate},
+            LANDLORD_ACCOUNT_NUMBER = #{landlordAccountNumber},
+            LANDLORD_BANK_CODE = #{landlordBankCode},
+            LANDLORD_ACCOUNT_HOLDER = #{landlordAccountHolder},
+            CONTRACT_FILE_PATH = #{contractFilePath},
+            EXECUTION_STATUS = #{executionStatus},
+            UPDATED_AT = TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS')
+        WHERE ID = #{loanId}
+    </update>
+
+    <update id="updateExecutionResult">
+        UPDATE LOANS SET 
+            ACTUAL_EXECUTION_DATE = #{actualExecutionDate},
+            TRANSACTION_ID = #{transactionId},
+            EXECUTION_STATUS = #{executionStatus},
+            EXECUTION_RESULT_MESSAGE = #{executionResultMessage},
+            UPDATED_AT = TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS')
+        WHERE ID = #{loanId}
+    </update>
+
+</mapper>

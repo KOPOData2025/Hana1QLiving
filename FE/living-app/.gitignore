@@ -1,0 +1,104 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+npm-cache/
+yarn-cache/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.development
+
+# OS specific files
+.DS_Store
+Thumbs.db
+*.pem
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# TypeScript
+*.tsbuildinfo
+*.d.ts.map
+
+# Build output
+build/
+out/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+
+# Android specific
+android/app/build/
+android/gradle/
+android/.gradle/
+android/app/src/main/assets/
+
+# iOS specific
+ios/build/
+ios/Pods/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+
+# React Native
+react-native-config.js
+
+# Testing
+coverage/
+jest/
+test-results/
+
+# Storybook
+storybook-static/
+
+app-example
+app/nul

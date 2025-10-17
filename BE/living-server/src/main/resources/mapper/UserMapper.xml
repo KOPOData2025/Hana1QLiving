@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.living.hana.mapper.UserMapper">
+
+    <resultMap id="UserResultMap" type="com.living.hana.entity.User">
+        <id column="ID" property="id"/>
+        <result column="PASSWORD" property="password"/>
+        <result column="NAME" property="name"/>
+        <result column="EMAIL" property="email"/>
+        <result column="PHONE" property="phone"/>
+        <result column="BEFORE_ADDRESS" property="beforeAddress"/>
+        <result column="CURRENT_ADDRESS" property="currentAddress"/>
+        <result column="USER_CI" property="userCi"/>
+        <result column="AGREE_MARKETING" property="agreeMarketing"/>
+        <result column="ROLE" property="role"/>
+        <result column="STATUS" property="status"/>
+        <result column="CREATED_AT" property="createdAt"/>
+        <result column="UPDATED_AT" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="UserResultMap">
+        SELECT * FROM USERS ORDER BY CREATED_AT DESC
+    </select>
+
+    <select id="findById" resultMap="UserResultMap">
+        SELECT * FROM USERS WHERE ID = #{id}
+    </select>
+
+    <select id="findByEmail" resultMap="UserResultMap">
+        SELECT * FROM USERS WHERE EMAIL = #{email}
+    </select>
+
+    <select id="findByUserCi" resultMap="UserResultMap">
+        SELECT * FROM USERS WHERE USER_CI = #{userCi}
+    </select>
+
+    <select id="findByEmailAndPassword" resultMap="UserResultMap">
+        SELECT * FROM USERS WHERE EMAIL = #{email} AND PASSWORD = #{password}
+    </select>
+
+    <insert id="insert" parameterType="com.living.hana.entity.User">
+        INSERT INTO USERS (PASSWORD, NAME, EMAIL, PHONE, BEFORE_ADDRESS, CURRENT_ADDRESS, USER_CI, AGREE_MARKETING, ROLE, STATUS, CREATED_AT, UPDATED_AT)
+        VALUES (#{password}, #{name}, #{email}, #{phone}, #{beforeAddress}, #{currentAddress}, #{userCi}, #{agreeMarketing}, #{role}, #{status}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update" parameterType="com.living.hana.entity.User">
+        UPDATE USERS SET 
+            PASSWORD = #{password},
+            NAME = #{name},
+            EMAIL = #{email},
+            PHONE = #{phone},
+            BEFORE_ADDRESS = #{beforeAddress},
+            CURRENT_ADDRESS = #{currentAddress},
+            USER_CI = #{userCi},
+            AGREE_MARKETING = #{agreeMarketing},
+            ROLE = #{role},
+            STATUS = #{status},
+            UPDATED_AT = #{updatedAt}
+        WHERE ID = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM USERS WHERE ID = #{id}
+    </delete>
+
+</mapper>

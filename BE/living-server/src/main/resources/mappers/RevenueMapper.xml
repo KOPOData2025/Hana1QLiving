@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.living.hana.mapper.RevenueMapper">
+
+    <!-- 기본 수익 조회 쿼리 (PAYMENTS 테이블에서 COMPLETED 상태만) -->
+    <sql id="baseRevenueQuery">
+        SELECT p.*, u.UNIT_NUMBER, b.NAME AS BUILDING_NAME
+        FROM PAYMENTS p
+        LEFT JOIN CONTRACTS c ON p.CONTRACT_ID = c.ID
+        LEFT JOIN UNITS u ON p.UNIT_ID = u.ID
+        LEFT JOIN BUILDINGS b ON p.BUILDING_ID = b.ID
+        WHERE p.STATUS = 'COMPLETED'
+    </sql>
+
+    <!-- 수익 목록 조회 (전체) -->
+    <select id="findAllRevenues" resultType="com.living.hana.entity.Payment">
+        <include refid="baseRevenueQuery"/>
+        ORDER BY p.PAID_DATE DESC, p.CREATED_AT DESC
+    </select>
+
+    <!-- 수익 목록 조회 (건물별) -->
+    <select id="findRevenuesByBuildingId" parameterType="long" resultType="com.living.hana.entity.Payment">
+        <include refid="baseRevenueQuery"/>
+        AND p.BUILDING_ID = #{buildingId}
+        ORDER BY p.PAID_DATE DESC, p.CREATED_AT DESC
+    </select>
+
+    <!-- 수익 목록 조회 (카테고리별) -->
+    <select id="findRevenuesByCategory" parameterType="string" resultType="com.living.hana.entity.Payment">
+        <include refid="baseRevenueQuery"/>
+        AND p.PAYMENT_CATEGORY = #{category}
+        ORDER BY p.PAID_DATE DESC, p.CREATED_AT DESC
+    </select>
+
+    <!-- 수익 목록 조회 (기간별) -->
+    <select id="findRevenuesByDateRange" resultType="com.living.hana.entity.Payment">
+        <include refid="baseRevenueQuery"/>
+        AND TO_CHAR(TO_DATE(p.PAID_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') BETWEEN #{startDate} AND #{endDate}
+        ORDER BY p.PAID_DATE DESC, p.CREATED_AT DESC
+    </select>
+
+    <!-- 수익 목록 조회 (건물 + 기간) -->
+    <select id="findRevenuesByBuildingIdAndDateRange" resultType="com.living.hana.entity.Payment">
+        <include refid="baseRevenueQuery"/>
+        AND p.BUILDING_ID = #{buildingId}
+        AND TO_CHAR(TO_DATE(p.PAID_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') BETWEEN #{startDate} AND #{endDate}
+        ORDER BY p.PAID_DATE DESC, p.CREATED_AT DESC
+    </select>
+
+    <!-- 수익 목록 조회 (카테고리 + 기간) -->
+    <select id="findRevenuesByCategoryAndDateRange" resultType="com.living.hana.entity.Payment">
+        <include refid="baseRevenueQuery"/>
+        AND p.PAYMENT_CATEGORY = #{category}
+        AND TO_CHAR(TO_DATE(p.PAID_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') BETWEEN #{startDate} AND #{endDate}
+        ORDER BY p.PAID_DATE DESC, p.CREATED_AT DESC
+    </select>
+
+    <!-- 수익 목록 조회 (복합 조건) -->
+    <select id="findRevenuesByConditions" resultType="com.living.hana.entity.Payment">
+        <include refid="baseRevenueQuery"/>
+        <if test="buildingId != null">
+            AND p.BUILDING_ID = #{buildingId}
+        </if>
+        <if test="category != null and category != ''">
+            AND p.PAYMENT_CATEGORY = #{category}
+        </if>
+        <if test="startDate != null and endDate != null">
+            AND TO_CHAR(TO_DATE(p.PAID_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') BETWEEN #{startDate} AND #{endDate}
+        </if>
+        ORDER BY p.PAID_DATE DESC, p.CREATED_AT DESC
+    </select>
+
+    <!-- 수익 개수 조회 -->
+    <select id="countAllRevenues" resultType="long">
+        SELECT COUNT(*) FROM PAYMENTS WHERE STATUS = 'COMPLETED'
+    </select>
+
+    <!-- 건물별 수익 개수 -->
+    <select id="countRevenuesByBuildingId" parameterType="long" resultType="long">
+        SELECT COUNT(*) FROM PAYMENTS
+        WHERE STATUS = 'COMPLETED' AND BUILDING_ID = #{buildingId}
+    </select>
+
+    <!-- 카테고리별 수익 개수 -->
+    <select id="countRevenuesByCategory" parameterType="string" resultType="long">
+        SELECT COUNT(*) FROM PAYMENTS
+        WHERE STATUS = 'COMPLETED' AND PAYMENT_CATEGORY = #{category}
+    </select>
+
+    <!-- 총 수익 금액 -->
+    <select id="getTotalRevenueAmount" resultType="java.math.BigDecimal">
+        SELECT NVL(SUM(AMOUNT), 0) FROM PAYMENTS WHERE STATUS = 'COMPLETED'
+    </select>
+
+    <!-- 건물별 총 수익 금액 -->
+    <select id="getTotalRevenueAmountByBuildingId" parameterType="long" resultType="java.math.BigDecimal">
+        SELECT NVL(SUM(AMOUNT), 0) FROM PAYMENTS
+        WHERE STATUS = 'COMPLETED' AND BUILDING_ID = #{buildingId}
+    </select>
+
+    <!-- 기간별 총 수익 금액 -->
+    <select id="getTotalRevenueAmountByDateRange" resultType="java.math.BigDecimal">
+        SELECT NVL(SUM(AMOUNT), 0) FROM PAYMENTS
+        WHERE STATUS = 'COMPLETED'
+        AND TO_CHAR(TO_DATE(PAID_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') BETWEEN #{startDate} AND #{endDate}
+    </select>
+
+    <!-- 건물+기간별 총 수익 금액 -->
+    <select id="getTotalRevenueAmountByBuildingIdAndDateRange" resultType="java.math.BigDecimal">
+        SELECT NVL(SUM(AMOUNT), 0) FROM PAYMENTS
+        WHERE STATUS = 'COMPLETED'
+        AND BUILDING_ID = #{buildingId}
+        AND TO_CHAR(TO_DATE(PAID_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') BETWEEN #{startDate} AND #{endDate}
+    </select>
+
+    <!-- 카테고리별 수익 통계 -->
+    <select id="getRevenueCategorySummary" resultType="com.living.hana.dto.RevenueResponse$CategorySummary">
+        SELECT
+            PAYMENT_CATEGORY as category,
+            NVL(SUM(AMOUNT), 0) as amount,
+            COUNT(*) as count,
+            ROUND(
+                NVL(SUM(AMOUNT), 0) * 100.0 /
+                NULLIF(
+                    (SELECT NVL(SUM(AMOUNT), 0) FROM PAYMENTS
+                     WHERE STATUS = 'COMPLETED'
+                     <if test="buildingId != null">
+                         AND BUILDING_ID = #{buildingId}
+                     </if>
+                     <if test="startDate != null and endDate != null">
+                         AND TO_CHAR(TO_DATE(PAID_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') BETWEEN #{startDate} AND #{endDate}
+                     </if>
+                    ), 0
+                ), 2
+            ) as percentage
+        FROM PAYMENTS
+        WHERE STATUS = 'COMPLETED'
+        <if test="buildingId != null">
+            AND BUILDING_ID = #{buildingId}
+        </if>
+        <if test="startDate != null and endDate != null">
+            AND TO_CHAR(TO_DATE(PAID_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') BETWEEN #{startDate} AND #{endDate}
+        </if>
+        GROUP BY PAYMENT_CATEGORY
+        ORDER BY amount DESC
+    </select>
+
+    <!-- 월별 수익 통계 -->
+    <select id="getRevenueMonthlySummary" resultType="com.living.hana.dto.RevenueResponse$MonthlySummary">
+        SELECT
+            TO_CHAR(TO_DATE(PAID_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM') as month,
+            NVL(SUM(AMOUNT), 0) as amount,
+            COUNT(*) as count
+        FROM PAYMENTS
+        WHERE STATUS = 'COMPLETED'
+        <if test="buildingId != null">
+            AND BUILDING_ID = #{buildingId}
+        </if>
+        <if test="startDate != null and endDate != null">
+            AND TO_CHAR(TO_DATE(PAID_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') BETWEEN #{startDate} AND #{endDate}
+        </if>
+        GROUP BY TO_CHAR(TO_DATE(PAID_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM')
+        ORDER BY month DESC
+    </select>
+
+    <!-- 건물별 수익 통계 -->
+    <select id="getRevenueBuildingSummary" resultType="com.living.hana.dto.RevenueResponse$BuildingSummary">
+        SELECT
+            p.BUILDING_ID as buildingId,
+            b.NAME as buildingName,
+            NVL(SUM(p.AMOUNT), 0) as amount,
+            COUNT(*) as count,
+            ROUND(
+                NVL(SUM(p.AMOUNT), 0) * 100.0 /
+                NULLIF(
+                    (SELECT NVL(SUM(AMOUNT), 0) FROM PAYMENTS
+                     WHERE STATUS = 'COMPLETED'
+                     <if test="startDate != null and endDate != null">
+                         AND TO_CHAR(TO_DATE(PAID_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') BETWEEN #{startDate} AND #{endDate}
+                     </if>
+                    ), 0
+                ), 2
+            ) as percentage
+        FROM PAYMENTS p
+        LEFT JOIN BUILDINGS b ON p.BUILDING_ID = b.ID
+        WHERE p.STATUS = 'COMPLETED'
+        <if test="startDate != null and endDate != null">
+            AND TO_CHAR(TO_DATE(p.PAID_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') BETWEEN #{startDate} AND #{endDate}
+        </if>
+        GROUP BY p.BUILDING_ID, b.NAME
+        ORDER BY amount DESC
+    </select>
+
+</mapper>

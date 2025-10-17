@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.living.hana.mapper.RentAutoPaymentMapper">
+
+    <!-- RENT_AUTO_PAYMENTS 테이블 삽입 -->
+    <insert id="insertRentAutoPayment" parameterType="com.living.hana.entity.RentAutoPayment">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            SELECT RENT_AUTO_PAYMENT_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO RENT_AUTO_PAYMENTS (
+            ID, USER_ID, UNIT_ID, CONTRACT_ID, LINKED_ACCOUNT_ID,
+            MONTHLY_RENT, PAYMENT_DAY, AUTO_PAYMENT_ENABLED, STATUS,
+            CREATED_AT, UPDATED_AT
+        ) VALUES (
+            #{id}, #{userId}, #{unitId}, #{contractId}, #{linkedAccountId},
+            #{monthlyRent}, #{paymentDay}, #{autoPaymentEnabled}, #{status},
+            SYSTIMESTAMP, SYSTIMESTAMP
+        )
+    </insert>
+
+    <!-- ID로 조회 -->
+    <select id="findById" resultType="com.living.hana.entity.RentAutoPayment">
+        SELECT
+            rap.ID,
+            rap.USER_ID,
+            rap.UNIT_ID,
+            rap.CONTRACT_ID,
+            rap.LINKED_ACCOUNT_ID,
+            rap.MONTHLY_RENT,
+            rap.PAYMENT_DAY,
+            rap.AUTO_PAYMENT_ENABLED,
+            rap.STATUS,
+            rap.LAST_PAYMENT_DATE,
+            rap.LAST_PAYMENT_STATUS,
+            rap.LAST_TRANSACTION_ID,
+            rap.FAILURE_REASON,
+            rap.FAILURE_COUNT,
+            rap.CREATED_AT,
+            rap.UPDATED_AT,
+            lba.ACCOUNT_NUMBER,
+            lba.ACCOUNT_NAME,
+            u.NAME AS USER_NAME,
+            un.UNIT_NUMBER,
+            b.NAME AS BUILDING_NAME,
+            c.CONTRACT_NUMBER
+        FROM RENT_AUTO_PAYMENTS rap
+        LEFT JOIN LINKED_BANK_ACCOUNTS lba ON rap.LINKED_ACCOUNT_ID = lba.ID
+        LEFT JOIN USERS u ON rap.USER_ID = u.ID
+        LEFT JOIN CONTRACTS c ON rap.CONTRACT_ID = c.ID
+        LEFT JOIN UNITS un ON rap.UNIT_ID = un.ID
+        LEFT JOIN BUILDINGS b ON un.BUILDING_ID = b.ID
+        WHERE rap.ID = #{id}
+    </select>
+
+    <!-- 사용자별 조회 -->
+    <select id="findByUserId" resultType="com.living.hana.entity.RentAutoPayment">
+        SELECT
+            rap.ID,
+            rap.USER_ID,
+            rap.UNIT_ID,
+            rap.CONTRACT_ID,
+            rap.LINKED_ACCOUNT_ID,
+            rap.MONTHLY_RENT,
+            rap.PAYMENT_DAY,
+            rap.AUTO_PAYMENT_ENABLED,
+            rap.STATUS,
+            rap.LAST_PAYMENT_DATE,
+            rap.LAST_PAYMENT_STATUS,
+            rap.LAST_TRANSACTION_ID,
+            rap.FAILURE_REASON,
+            rap.FAILURE_COUNT,
+            rap.CREATED_AT,
+            rap.UPDATED_AT,
+            lba.ACCOUNT_NUMBER,
+            lba.ACCOUNT_NAME,
+            u.NAME AS USER_NAME,
+            un.UNIT_NUMBER,
+            b.NAME AS BUILDING_NAME,
+            c.CONTRACT_NUMBER
+        FROM RENT_AUTO_PAYMENTS rap
+        LEFT JOIN LINKED_BANK_ACCOUNTS lba ON rap.LINKED_ACCOUNT_ID = lba.ID
+        LEFT JOIN USERS u ON rap.USER_ID = u.ID
+        LEFT JOIN CONTRACTS c ON rap.CONTRACT_ID = c.ID
+        LEFT JOIN UNITS un ON rap.UNIT_ID = un.ID
+        LEFT JOIN BUILDINGS b ON un.BUILDING_ID = b.ID
+        WHERE rap.USER_ID = #{userId}
+        ORDER BY rap.CREATED_AT DESC
+    </select>
+
+    <!-- 계약별 조회 -->
+    <select id="findByContractId" resultType="com.living.hana.entity.RentAutoPayment">
+        SELECT
+            rap.ID,
+            rap.USER_ID,
+            rap.UNIT_ID,
+            rap.CONTRACT_ID,
+            rap.LINKED_ACCOUNT_ID,
+            rap.MONTHLY_RENT,
+            rap.PAYMENT_DAY,
+            rap.AUTO_PAYMENT_ENABLED,
+            rap.STATUS,
+            rap.LAST_PAYMENT_DATE,
+            rap.LAST_PAYMENT_STATUS,
+            rap.LAST_TRANSACTION_ID,
+            rap.FAILURE_REASON,
+            rap.FAILURE_COUNT,
+            rap.CREATED_AT,
+            rap.UPDATED_AT,
+            lba.ACCOUNT_NUMBER,
+            lba.ACCOUNT_NAME,
+            u.NAME AS USER_NAME,
+            un.UNIT_NUMBER,
+            b.NAME AS BUILDING_NAME,
+            c.CONTRACT_NUMBER
+        FROM RENT_AUTO_PAYMENTS rap
+        LEFT JOIN LINKED_BANK_ACCOUNTS lba ON rap.LINKED_ACCOUNT_ID = lba.ID
+        LEFT JOIN USERS u ON rap.USER_ID = u.ID
+        LEFT JOIN CONTRACTS c ON rap.CONTRACT_ID = c.ID
+        LEFT JOIN UNITS un ON rap.UNIT_ID = un.ID
+        LEFT JOIN BUILDINGS b ON un.BUILDING_ID = b.ID
+        WHERE rap.CONTRACT_ID = #{contractId}
+        ORDER BY rap.CREATED_AT DESC
+    </select>
+
+    <!-- 업데이트 -->
+    <update id="updateRentAutoPayment" parameterType="com.living.hana.entity.RentAutoPayment">
+        UPDATE RENT_AUTO_PAYMENTS SET
+            AUTO_PAYMENT_ENABLED = #{autoPaymentEnabled},
+            STATUS = #{status},
+            UPDATED_AT = SYSTIMESTAMP
+        WHERE ID = #{id}
+    </update>
+
+    <!-- 삭제 -->
+    <delete id="deleteRentAutoPayment">
+        DELETE FROM RENT_AUTO_PAYMENTS WHERE ID = #{id}
+    </delete>
+
+    <!-- 상태 업데이트 -->
+    <update id="updateStatus">
+        UPDATE RENT_AUTO_PAYMENTS SET
+            STATUS = #{isActive},
+            UPDATED_AT = SYSTIMESTAMP
+        WHERE ID = #{id}
+    </update>
+
+    <!-- 오늘 예정된 결제 조회 -->
+    <select id="findTodayScheduledPayments" resultType="com.living.hana.entity.RentAutoPayment">
+        SELECT
+            rap.ID,
+            rap.USER_ID,
+            rap.UNIT_ID,
+            rap.CONTRACT_ID,
+            rap.LINKED_ACCOUNT_ID,
+            rap.MONTHLY_RENT,
+            rap.PAYMENT_DAY,
+            rap.AUTO_PAYMENT_ENABLED,
+            rap.STATUS,
+            rap.LAST_PAYMENT_DATE,
+            rap.LAST_PAYMENT_STATUS,
+            rap.LAST_TRANSACTION_ID,
+            rap.FAILURE_REASON,
+            rap.FAILURE_COUNT,
+            rap.CREATED_AT,
+            rap.UPDATED_AT,
+            lba.ACCOUNT_NUMBER,
+            lba.ACCOUNT_NAME,
+            u.NAME AS USER_NAME,
+            un.UNIT_NUMBER,
+            b.NAME AS BUILDING_NAME,
+            c.CONTRACT_NUMBER
+        FROM RENT_AUTO_PAYMENTS rap
+        LEFT JOIN LINKED_BANK_ACCOUNTS lba ON rap.LINKED_ACCOUNT_ID = lba.ID
+        LEFT JOIN USERS u ON rap.USER_ID = u.ID
+        LEFT JOIN CONTRACTS c ON rap.CONTRACT_ID = c.ID
+        LEFT JOIN UNITS un ON rap.UNIT_ID = un.ID
+        LEFT JOIN BUILDINGS b ON un.BUILDING_ID = b.ID
+        WHERE rap.STATUS = 'ACTIVE'
+        AND rap.AUTO_PAYMENT_ENABLED = 1
+        AND rap.PAYMENT_DAY = EXTRACT(DAY FROM #{today})
+        ORDER BY rap.ID
+    </select>
+
+    <!-- 특정 계약의 활성 자동이체 설정 조회 -->
+    <select id="findActiveByContractId" resultType="com.living.hana.entity.RentAutoPayment">
+        SELECT
+            rap.ID,
+            rap.USER_ID,
+            rap.UNIT_ID,
+            rap.CONTRACT_ID,
+            rap.LINKED_ACCOUNT_ID,
+            rap.MONTHLY_RENT,
+            rap.PAYMENT_DAY,
+            rap.AUTO_PAYMENT_ENABLED,
+            rap.STATUS,
+            rap.LAST_PAYMENT_DATE,
+            rap.LAST_PAYMENT_STATUS,
+            rap.LAST_TRANSACTION_ID,
+            rap.FAILURE_REASON,
+            rap.FAILURE_COUNT,
+            rap.CREATED_AT,
+            rap.UPDATED_AT,
+            lba.ACCOUNT_NUMBER,
+            lba.ACCOUNT_NAME,
+            u.NAME AS USER_NAME,
+            un.UNIT_NUMBER,
+            b.NAME AS BUILDING_NAME,
+            c.CONTRACT_NUMBER
+        FROM RENT_AUTO_PAYMENTS rap
+        LEFT JOIN LINKED_BANK_ACCOUNTS lba ON rap.LINKED_ACCOUNT_ID = lba.ID
+        LEFT JOIN USERS u ON rap.USER_ID = u.ID
+        LEFT JOIN CONTRACTS c ON rap.CONTRACT_ID = c.ID
+        LEFT JOIN UNITS un ON rap.UNIT_ID = un.ID
+        LEFT JOIN BUILDINGS b ON un.BUILDING_ID = b.ID
+        WHERE rap.CONTRACT_ID = #{contractId}
+        AND rap.STATUS = 'ACTIVE'
+        AND rap.AUTO_PAYMENT_ENABLED = 1
+    </select>
+
+    <!-- 사용자별 활성 자동이체 설정 개수 -->
+    <select id="countActiveByUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM RENT_AUTO_PAYMENTS
+        WHERE USER_ID = #{userId}
+        AND STATUS = 'ACTIVE'
+        AND AUTO_PAYMENT_ENABLED = 1
+    </select>
+
+    <!-- 계좌별 활성 자동이체 설정 개수 -->
+    <select id="countActiveByAccountId" resultType="int">
+        SELECT COUNT(*)
+        FROM RENT_AUTO_PAYMENTS
+        WHERE LINKED_ACCOUNT_ID = #{linkedBankAccountId}
+        AND STATUS = 'ACTIVE'
+        AND AUTO_PAYMENT_ENABLED = 1
+    </select>
+
+</mapper>

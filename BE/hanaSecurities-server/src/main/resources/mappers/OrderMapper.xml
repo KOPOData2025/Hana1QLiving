@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hana.securities.mapper.OrderMapper">
+    
+    <insert id="insertOrder" parameterType="com.hana.securities.entity.Order">
+        INSERT INTO ORDERS (
+            ORDER_ID, CUSTOMER_ID, PRODUCT_ID, ORDER_TYPE, QUANTITY, 
+            UNIT_PRICE, TOTAL_AMOUNT, STATUS, ORDER_TIME, EXECUTED_TIME, FAILURE_REASON
+        ) VALUES (
+            #{orderId, jdbcType=VARCHAR}, 
+            #{customerId, jdbcType=VARCHAR}, 
+            #{productId, jdbcType=VARCHAR}, 
+            #{orderType, jdbcType=VARCHAR}, 
+            #{quantity, jdbcType=NUMERIC}, 
+            #{unitPrice, jdbcType=NUMERIC}, 
+            #{totalAmount, jdbcType=NUMERIC}, 
+            #{status, jdbcType=VARCHAR}, 
+            #{orderTime, jdbcType=TIMESTAMP}, 
+            #{executedTime, jdbcType=TIMESTAMP}, 
+            #{failureReason, jdbcType=VARCHAR}
+        )
+    </insert>
+    
+    <select id="findOrderById" resultType="com.hana.securities.entity.Order">
+        SELECT 
+            ORDER_ID, CUSTOMER_ID, PRODUCT_ID, ORDER_TYPE, QUANTITY, 
+            UNIT_PRICE, TOTAL_AMOUNT, STATUS, ORDER_TIME, EXECUTED_TIME, FAILURE_REASON
+        FROM ORDERS 
+        WHERE ORDER_ID = #{orderId}
+    </select>
+    
+    <select id="findOrdersByCustomerId" resultType="com.hana.securities.entity.Order">
+        SELECT 
+            ORDER_ID, CUSTOMER_ID, PRODUCT_ID, ORDER_TYPE, QUANTITY, 
+            UNIT_PRICE, TOTAL_AMOUNT, STATUS, ORDER_TIME, EXECUTED_TIME, FAILURE_REASON
+        FROM ORDERS 
+        WHERE CUSTOMER_ID = #{customerId}
+        ORDER BY ORDER_TIME DESC
+    </select>
+    
+    <select id="findOrdersByStatus" resultType="com.hana.securities.entity.Order">
+        SELECT 
+            ORDER_ID, CUSTOMER_ID, PRODUCT_ID, ORDER_TYPE, QUANTITY, 
+            UNIT_PRICE, TOTAL_AMOUNT, STATUS, ORDER_TIME, EXECUTED_TIME, FAILURE_REASON
+        FROM ORDERS 
+        WHERE STATUS = #{status}
+        ORDER BY ORDER_TIME DESC
+    </select>
+    
+    <update id="updateOrderStatus">
+        UPDATE ORDERS 
+        SET STATUS = #{status, jdbcType=VARCHAR},
+            EXECUTED_TIME = #{executedTime, jdbcType=TIMESTAMP},
+            FAILURE_REASON = #{failureReason, jdbcType=VARCHAR}
+        WHERE ORDER_ID = #{orderId, jdbcType=VARCHAR}
+    </update>
+    
+    <update id="updateOrder" parameterType="com.hana.securities.entity.Order">
+        UPDATE ORDERS 
+        SET CUSTOMER_ID = #{customerId},
+            PRODUCT_ID = #{productId},
+            ORDER_TYPE = #{orderType},
+            QUANTITY = #{quantity},
+            UNIT_PRICE = #{unitPrice},
+            TOTAL_AMOUNT = #{totalAmount},
+            STATUS = #{status},
+            ORDER_TIME = #{orderTime},
+            EXECUTED_TIME = #{executedTime},
+            FAILURE_REASON = #{failureReason}
+        WHERE ORDER_ID = #{orderId}
+    </update>
+    
+    <select id="existsByOrderId" resultType="boolean">
+        SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
+        FROM ORDERS 
+        WHERE ORDER_ID = #{orderId}
+    </select>
+    
+    <select id="findAllOrders" resultType="com.hana.securities.entity.Order">
+        SELECT 
+            ORDER_ID, CUSTOMER_ID, PRODUCT_ID, ORDER_TYPE, QUANTITY, 
+            UNIT_PRICE, TOTAL_AMOUNT, STATUS, ORDER_TIME, EXECUTED_TIME, FAILURE_REASON
+        FROM ORDERS 
+        ORDER BY ORDER_TIME DESC
+    </select>
+    
+    <delete id="deleteOrder">
+        DELETE FROM ORDERS 
+        WHERE ORDER_ID = #{orderId, jdbcType=VARCHAR}
+    </delete>
+    
+</mapper>

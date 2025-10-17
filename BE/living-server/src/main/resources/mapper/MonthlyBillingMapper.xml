@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.living.hana.mapper.MonthlyBillingMapper">
+
+    <resultMap id="MonthlyBillingResultMap" type="com.living.hana.entity.MonthlyBilling">
+        <id column="ID" property="id"/>
+        <result column="UNIT_ID" property="unitId"/>
+        <result column="CHARGED_BY_USER_ID" property="chargedByUserId"/>
+        <result column="CHARGE_AMOUNT" property="totalAmount"/>
+        <result column="CHARGE_DESCRIPTION" property="chargeDescription"/>
+        <result column="CHARGE_DATE" property="chargeDate"/>
+        <result column="DUE_DATE" property="dueDate"/>
+        <result column="STATUS" property="status"/>
+        <result column="AUTO_PAYMENT_TRIGGERED" property="autoPaymentTriggered"/>
+        <result column="PAYMENT_ID" property="paymentId"/>
+        <result column="CREATED_AT" property="createdAt"/>
+        <result column="UPDATED_AT" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="MonthlyBillingResultMap">
+        SELECT * FROM MANAGEMENT_FEE_CHARGES ORDER BY CREATED_AT DESC
+    </select>
+
+    <select id="findById" resultMap="MonthlyBillingResultMap">
+        SELECT * FROM MANAGEMENT_FEE_CHARGES WHERE ID = #{id}
+    </select>
+
+    <select id="findByUserId" resultMap="MonthlyBillingResultMap">
+        SELECT * FROM MANAGEMENT_FEE_CHARGES WHERE UNIT_ID IN (
+            SELECT ID FROM UNITS WHERE ID IN (
+                SELECT UNIT_ID FROM CONTRACTS WHERE USER_ID = #{userId}
+            )
+        ) ORDER BY CHARGE_DATE DESC
+    </select>
+
+    <select id="findByUserIdAndMonth" resultMap="MonthlyBillingResultMap">
+        SELECT * FROM MANAGEMENT_FEE_CHARGES
+        WHERE UNIT_ID IN (
+            SELECT UNIT_ID FROM CONTRACTS WHERE USER_ID = #{userId}
+        ) AND SUBSTR(CHARGE_DATE, 1, 7) = #{billingMonth}
+    </select>
+
+    <select id="findByStatus" resultMap="MonthlyBillingResultMap">
+        SELECT * FROM MANAGEMENT_FEE_CHARGES WHERE STATUS = #{status} ORDER BY CREATED_AT DESC
+    </select>
+
+    <select id="findByBillingMonth" resultMap="MonthlyBillingResultMap">
+        SELECT * FROM MANAGEMENT_FEE_CHARGES WHERE SUBSTR(CHARGE_DATE, 1, 7) = #{billingMonth} ORDER BY CREATED_AT DESC
+    </select>
+
+    <select id="findPendingBillings" resultMap="MonthlyBillingResultMap">
+        SELECT * FROM MANAGEMENT_FEE_CHARGES WHERE STATUS = 'PENDING' ORDER BY DUE_DATE ASC
+    </select>
+
+    <select id="findOverdueBillings" resultMap="MonthlyBillingResultMap">
+        SELECT * FROM MANAGEMENT_FEE_CHARGES WHERE STATUS = 'OVERDUE' ORDER BY DUE_DATE ASC
+    </select>
+
+    <insert id="insertMonthlyBilling" parameterType="com.living.hana.entity.MonthlyBilling" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO MANAGEMENT_FEE_CHARGES (
+            UNIT_ID, CHARGED_BY_USER_ID, CHARGE_AMOUNT, CHARGE_DESCRIPTION,
+            CHARGE_DATE, DUE_DATE, STATUS, AUTO_PAYMENT_TRIGGERED,
+            PAYMENT_ID, CREATED_AT, UPDATED_AT
+        ) VALUES (
+            #{unitId}, #{chargedByUserId}, #{totalAmount}, #{chargeDescription},
+            #{chargeDate}, #{dueDate}, #{status}, #{autoPaymentTriggered},
+            #{paymentId}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <update id="updateMonthlyBilling" parameterType="com.living.hana.entity.MonthlyBilling">
+        UPDATE MANAGEMENT_FEE_CHARGES SET
+            UNIT_ID = #{unitId},
+            CHARGED_BY_USER_ID = #{chargedByUserId},
+            CHARGE_AMOUNT = #{totalAmount},
+            CHARGE_DESCRIPTION = #{chargeDescription},
+            CHARGE_DATE = #{chargeDate},
+            DUE_DATE = #{dueDate},
+            STATUS = #{status},
+            AUTO_PAYMENT_TRIGGERED = #{autoPaymentTriggered},
+            PAYMENT_ID = #{paymentId},
+            UPDATED_AT = #{updatedAt}
+        WHERE ID = #{id}
+    </update>
+
+    <update id="updateBillingStatus">
+        UPDATE MANAGEMENT_FEE_CHARGES SET STATUS = #{status}, UPDATED_AT = CURRENT_TIMESTAMP
+        WHERE ID = #{id}
+    </update>
+
+    <delete id="deleteMonthlyBilling">
+        DELETE FROM MANAGEMENT_FEE_CHARGES WHERE ID = #{id}
+    </delete>
+
+    <select id="existsByUserIdAndMonth" resultType="boolean">
+        SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
+        FROM MANAGEMENT_FEE_CHARGES
+        WHERE UNIT_ID IN (
+            SELECT UNIT_ID FROM CONTRACTS WHERE USER_ID = #{userId}
+        ) AND SUBSTR(CHARGE_DATE, 1, 7) = #{billingMonth}
+    </select>
+
+</mapper>

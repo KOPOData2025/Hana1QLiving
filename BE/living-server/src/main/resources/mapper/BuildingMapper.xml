@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.living.hana.mapper.BuildingMapper">
+
+    <resultMap id="BuildingResultMap" type="com.living.hana.entity.Building">
+        <id column="ID" property="id"/>
+        <result column="NAME" property="name"/>
+        <result column="ADDRESS" property="address"/>
+        <result column="ADDRESS_DETAIL" property="addressDetail"/>
+        <result column="ZIP_CODE" property="zipCode"/>
+        <result column="BUILDING_TYPE" property="buildingType"/>
+        <result column="TOTAL_FLOORS" property="totalFloors"/>
+        <result column="TOTAL_UNITS" property="totalUnits"/>
+        <result column="STATUS" property="status"/>
+        <result column="CITY" property="city"/>
+        <result column="DISTRICT" property="district"/>
+        <result column="LATITUDE" property="latitude"/>
+        <result column="LONGITUDE" property="longitude"/>
+        <result column="IMAGES" property="images"/>
+        <result column="CREATED_AT" property="createdAt"/>
+        <result column="UPDATED_AT" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="BuildingResultMap">
+        SELECT * FROM BUILDINGS ORDER BY ID
+    </select>
+
+    <select id="findById" resultMap="BuildingResultMap">
+        SELECT * FROM BUILDINGS WHERE ID = #{id}
+    </select>
+
+    <select id="findByName" resultMap="BuildingResultMap">
+        SELECT * FROM BUILDINGS WHERE NAME = #{name}
+    </select>
+
+    <select id="findByStatus" resultMap="BuildingResultMap">
+        SELECT * FROM BUILDINGS WHERE STATUS = #{status} ORDER BY ID
+    </select>
+
+    <insert id="insert" parameterType="com.living.hana.entity.Building">
+        INSERT INTO BUILDINGS (NAME, ADDRESS, ADDRESS_DETAIL, ZIP_CODE, BUILDING_TYPE, TOTAL_FLOORS, TOTAL_UNITS, STATUS, CITY, DISTRICT, LATITUDE, LONGITUDE, IMAGES, CREATED_AT, UPDATED_AT)
+        VALUES (#{name}, #{address}, #{addressDetail}, #{zipCode}, #{buildingType}, #{totalFloors}, #{totalUnits}, #{status}, #{city}, #{district}, #{latitude}, #{longitude}, #{images}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update" parameterType="com.living.hana.entity.Building">
+        UPDATE BUILDINGS SET
+            NAME = #{name},
+            ADDRESS = #{address},
+            ADDRESS_DETAIL = #{addressDetail},
+            ZIP_CODE = #{zipCode},
+            BUILDING_TYPE = #{buildingType},
+            TOTAL_FLOORS = #{totalFloors},
+            TOTAL_UNITS = #{totalUnits},
+            STATUS = #{status},
+            CITY = #{city},
+            DISTRICT = #{district},
+            LATITUDE = #{latitude},
+            LONGITUDE = #{longitude},
+            IMAGES = #{images},
+            UPDATED_AT = #{updatedAt}
+        WHERE ID = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM BUILDINGS WHERE ID = #{id}
+    </delete>
+
+</mapper>

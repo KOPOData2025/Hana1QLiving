@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hana.securities.mapper.ReitsProductMapper">
+
+    <resultMap id="ReitsProductResultMap" type="com.hana.securities.entity.ReitsProduct">
+        <id property="productId" column="PRODUCT_ID"/>
+        <result property="productName" column="PRODUCT_NAME"/>
+        <result property="productType" column="PRODUCT_TYPE"/>
+        <result property="totalReturn" column="TOTAL_RETURN"/>
+        <result property="dividendYield" column="DIVIDEND_YIELD"/>
+        <result property="riskLevel" column="RISK_LEVEL"/>
+        <result property="status" column="STATUS"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+    </resultMap>
+
+    <select id="findAllActiveProducts" resultMap="ReitsProductResultMap">
+        SELECT 
+            PRODUCT_ID, PRODUCT_NAME, PRODUCT_TYPE,
+            TOTAL_RETURN, DIVIDEND_YIELD, RISK_LEVEL,
+            STATUS, CREATED_AT, UPDATED_AT
+        FROM REITS_PRODUCTS 
+        WHERE STATUS = 'ACTIVE'
+        ORDER BY PRODUCT_ID
+    </select>
+
+    <select id="findByProductId" resultMap="ReitsProductResultMap">
+        SELECT 
+            PRODUCT_ID, PRODUCT_NAME, PRODUCT_TYPE,
+            TOTAL_RETURN, DIVIDEND_YIELD, RISK_LEVEL,
+            STATUS, CREATED_AT, UPDATED_AT
+        FROM REITS_PRODUCTS 
+        WHERE PRODUCT_ID = #{productId}
+        AND STATUS = 'ACTIVE'
+    </select>
+
+    <select id="findByProductType" resultMap="ReitsProductResultMap">
+        SELECT 
+            PRODUCT_ID, PRODUCT_NAME, PRODUCT_TYPE,
+            TOTAL_RETURN, DIVIDEND_YIELD, RISK_LEVEL,
+            STATUS, CREATED_AT, UPDATED_AT
+        FROM REITS_PRODUCTS 
+        WHERE UPPER(PRODUCT_TYPE) = UPPER(#{productType})
+        AND STATUS = 'ACTIVE'
+        ORDER BY PRODUCT_ID
+    </select>
+
+    <select id="searchProducts" resultMap="ReitsProductResultMap">
+        SELECT 
+            PRODUCT_ID, PRODUCT_NAME, PRODUCT_TYPE,
+            TOTAL_RETURN, DIVIDEND_YIELD, RISK_LEVEL,
+            STATUS, CREATED_AT, UPDATED_AT
+        FROM REITS_PRODUCTS 
+        WHERE STATUS = 'ACTIVE'
+        <if test="name != null and name != ''">
+            AND UPPER(PRODUCT_NAME) LIKE '%' || UPPER(#{name}) || '%'
+        </if>
+        <if test="type != null and type != ''">
+            AND UPPER(PRODUCT_TYPE) = UPPER(#{type})
+        </if>
+        <if test="riskLevel != null and riskLevel != ''">
+            AND RISK_LEVEL = #{riskLevel}
+        </if>
+        ORDER BY PRODUCT_ID
+    </select>
+
+    <insert id="insertProduct">
+        INSERT INTO REITS_PRODUCTS (
+            PRODUCT_ID, PRODUCT_NAME, PRODUCT_TYPE,
+            TOTAL_RETURN, DIVIDEND_YIELD, RISK_LEVEL, STATUS
+        ) VALUES (
+            #{productId}, #{productName}, #{productType},
+            #{totalReturn}, #{dividendYield}, #{riskLevel}, #{status}
+        )
+    </insert>
+
+    <update id="updateProduct">
+        UPDATE REITS_PRODUCTS SET
+            PRODUCT_NAME = #{productName},
+            PRODUCT_TYPE = #{productType},
+            TOTAL_RETURN = #{totalReturn},
+            DIVIDEND_YIELD = #{dividendYield},
+            RISK_LEVEL = #{riskLevel},
+            STATUS = #{status},
+            UPDATED_AT = CURRENT_TIMESTAMP
+        WHERE PRODUCT_ID = #{productId}
+    </update>
+
+    <update id="deleteProduct">
+        UPDATE REITS_PRODUCTS 
+        SET STATUS = 'INACTIVE', UPDATED_AT = CURRENT_TIMESTAMP 
+        WHERE PRODUCT_ID = #{productId}
+    </update>
+
+
+</mapper>

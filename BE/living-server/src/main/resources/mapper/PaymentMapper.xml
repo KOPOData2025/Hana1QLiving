@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.living.hana.mapper.PaymentMapper">
+
+    <resultMap id="PaymentResultMap" type="com.living.hana.entity.Payment">
+        <id column="ID" property="id"/>
+        <result column="CONTRACT_ID" property="contractId"/>
+        <result column="USER_ID" property="userId"/>
+        <result column="UNIT_ID" property="unitId"/>
+        <result column="BUILDING_ID" property="buildingId"/>
+        <result column="PAYMENT_TYPE" property="paymentType"/>
+        <result column="PAYMENT_CATEGORY" property="paymentCategory"/>
+        <result column="TITLE" property="title"/>
+        <result column="DESCRIPTION" property="description"/>
+        <result column="AMOUNT" property="amount"/>
+        <result column="DUE_DATE" property="dueDate"/>
+        <result column="STATUS" property="status"/>
+        <result column="PAID_DATE" property="paidDate"/>
+        <result column="PAYMENT_METHOD" property="paymentMethod"/>
+        <result column="MANAGEMENT_CHARGE_ID" property="managementChargeId"/>
+        <result column="HANA_BANK_TRANSACTION_ID" property="hanaBankTransactionId"/>
+        <result column="CREATED_AT" property="createdAt"/>
+        <result column="UPDATED_AT" property="updatedAt"/>
+    </resultMap>
+
+    <!-- 확장된 결제 내역 결과 맵 (호실, 건물 정보 포함) -->
+    <resultMap id="PaymentWithDetailsResultMap" type="com.living.hana.entity.Payment">
+        <id column="ID" property="id"/>
+        <result column="CONTRACT_ID" property="contractId"/>
+        <result column="USER_ID" property="userId"/>
+        <result column="UNIT_ID" property="unitId"/>
+        <result column="BUILDING_ID" property="buildingId"/>
+        <result column="PAYMENT_TYPE" property="paymentType"/>
+        <result column="PAYMENT_CATEGORY" property="paymentCategory"/>
+        <result column="TITLE" property="title"/>
+        <result column="DESCRIPTION" property="description"/>
+        <result column="AMOUNT" property="amount"/>
+        <result column="DUE_DATE" property="dueDate"/>
+        <result column="STATUS" property="status"/>
+        <result column="PAID_DATE" property="paidDate"/>
+        <result column="PAYMENT_METHOD" property="paymentMethod"/>
+        <result column="MANAGEMENT_CHARGE_ID" property="managementChargeId"/>
+        <result column="HANA_BANK_TRANSACTION_ID" property="hanaBankTransactionId"/>
+        <result column="CREATED_AT" property="createdAt"/>
+        <result column="UPDATED_AT" property="updatedAt"/>
+        <!-- 추가 정보 -->
+        <result column="UNIT_NUMBER" property="unitNumber"/>
+        <result column="NAME" property="buildingName"/>
+        <result column="USER_NAME" property="userName"/>
+    </resultMap>
+
+    <!-- 모든 납부 내역 조회 -->
+    <select id="findAll" resultMap="PaymentWithDetailsResultMap">
+        SELECT
+            p.*,
+            u.UNIT_NUMBER,
+            b.NAME,
+            usr.NAME AS USER_NAME
+        FROM PAYMENTS p
+        LEFT JOIN CONTRACTS c ON p.CONTRACT_ID = c.ID
+        LEFT JOIN UNITS u ON c.UNIT_ID = u.ID
+        LEFT JOIN BUILDINGS b ON u.BUILDING_ID = b.ID
+        LEFT JOIN USERS usr ON p.USER_ID = usr.ID
+        ORDER BY p.CREATED_AT DESC
+    </select>
+
+    <!-- ID로 납부 내역 조회 -->
+    <select id="findById" resultMap="PaymentResultMap">
+        SELECT * FROM PAYMENTS WHERE ID = #{id}
+    </select>
+
+    <!-- 사용자별 납부 내역 조회 -->
+    <select id="findByUserId" resultMap="PaymentResultMap">
+        SELECT * FROM PAYMENTS WHERE USER_ID = #{userId} ORDER BY PAID_DATE DESC, CREATED_AT DESC
+    </select>
+
+    <!-- 계약별 납부 내역 조회 -->
+    <select id="findByContractId" resultMap="PaymentResultMap">
+        SELECT * FROM PAYMENTS WHERE CONTRACT_ID = #{contractId} ORDER BY PAID_DATE DESC, CREATED_AT DESC
+    </select>
+
+    <!-- 건물별 납부 내역 조회 -->
+    <select id="findByBuildingId" resultMap="PaymentResultMap">
+        SELECT p.* FROM PAYMENTS p
+        JOIN CONTRACTS c ON p.CONTRACT_ID = c.ID
+        JOIN UNITS u ON c.UNIT_ID = u.ID
+        WHERE u.BUILDING_ID = #{buildingId}
+        ORDER BY p.PAID_DATE DESC, p.CREATED_AT DESC
+    </select>
+
+    <!-- 호실별 납부 내역 조회 -->
+    <select id="findByUnitId" resultMap="PaymentResultMap">
+        SELECT p.* FROM PAYMENTS p
+        JOIN CONTRACTS c ON p.CONTRACT_ID = c.ID
+        WHERE c.UNIT_ID = #{unitId}
+        ORDER BY p.PAID_DATE DESC, p.CREATED_AT DESC
+    </select>
+
+    <!-- 상태별 납부 내역 조회 -->
+    <select id="findByStatus" resultMap="PaymentResultMap">
+        SELECT * FROM PAYMENTS WHERE STATUS = #{status} ORDER BY PAID_DATE DESC, CREATED_AT DESC
+    </select>
+
+    <!-- 건물의 유효한 계약자들 조회 (새 납부 고지 시 사용) -->
+    <select id="findActiveContractsByBuildingId" resultType="com.living.hana.entity.Contract">
+        SELECT
+            c.ID,
+            c.USER_ID,
+            c.UNIT_ID,
+            c.CONTRACT_NUMBER,
+            c.START_DATE,
+            c.END_DATE,
+            c.DEPOSIT,
+            c.MONTHLY_RENT,
+            c.STATUS,
+            c.CREATED_AT,
+            c.UPDATED_AT
+        FROM CONTRACTS c
+        LEFT JOIN UNITS u ON c.UNIT_ID = u.ID
+        WHERE u.BUILDING_ID = #{buildingId}
+        AND c.STATUS = 'ACTIVE'
+        ORDER BY u.UNIT_NUMBER
+    </select>
+
+    <!-- 납부 내역 생성 -->
+    <insert id="insert" parameterType="com.living.hana.entity.Payment">
+        <selectKey keyProperty="id" resultType="Long" order="BEFORE">
+            SELECT NVL(MAX(ID), 0) + 1 FROM PAYMENTS
+        </selectKey>
+        INSERT INTO PAYMENTS (
+            ID, CONTRACT_ID, USER_ID, UNIT_ID, BUILDING_ID, PAYMENT_TYPE,
+            TITLE, DESCRIPTION, AMOUNT, DUE_DATE, STATUS, PAID_DATE,
+            PAYMENT_METHOD, CREATED_AT, UPDATED_AT, PAYMENT_CATEGORY,
+            MANAGEMENT_CHARGE_ID, HANA_BANK_TRANSACTION_ID
+        )
+        VALUES (
+            #{id}, #{contractId}, #{userId}, #{unitId}, #{buildingId}, #{paymentType},
+            #{title}, #{description}, #{amount}, #{dueDate}, #{status}, #{paidDate},
+            #{paymentMethod}, #{createdAt}, #{updatedAt}, #{paymentCategory},
+            #{managementChargeId}, #{hanaBankTransactionId}
+        )
+    </insert>
+
+    <!-- 납부 내역 수정 -->
+    <update id="update" parameterType="com.living.hana.entity.Payment">
+        UPDATE PAYMENTS SET
+            CONTRACT_ID = #{contractId},
+            USER_ID = #{userId},
+            UNIT_ID = #{unitId},
+            BUILDING_ID = #{buildingId},
+            PAYMENT_TYPE = #{paymentType},
+            PAYMENT_CATEGORY = #{paymentCategory},
+            TITLE = #{title},
+            DESCRIPTION = #{description},
+            AMOUNT = #{amount},
+            DUE_DATE = #{dueDate},
+            STATUS = #{status},
+            PAID_DATE = #{paidDate},
+            PAYMENT_METHOD = #{paymentMethod},
+            MANAGEMENT_CHARGE_ID = #{managementChargeId},
+            HANA_BANK_TRANSACTION_ID = #{hanaBankTransactionId},
+            UPDATED_AT = #{updatedAt}
+        WHERE ID = #{id}
+    </update>
+
+    <!-- 납부 상태 변경 -->
+    <update id="updateStatus">
+        UPDATE PAYMENTS SET
+            STATUS = #{status},
+            HANA_BANK_TRANSACTION_ID = #{hanaBankTransactionId},
+            UPDATED_AT = TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS')
+        WHERE ID = #{id}
+    </update>
+
+    <!-- 납부 내역 삭제 -->
+    <delete id="deleteById">
+        DELETE FROM PAYMENTS WHERE ID = #{id}
+    </delete>
+
+    <!-- 사용자별 월세/관리비 결제 내역 조회 (상세 정보 포함) -->
+    <select id="findPaymentHistoryByUserId" resultMap="PaymentWithDetailsResultMap">
+        SELECT
+            p.*,
+            u.UNIT_NUMBER,
+            b.NAME,
+            usr.NAME AS USER_NAME
+        FROM PAYMENTS p
+        LEFT JOIN CONTRACTS c ON p.CONTRACT_ID = c.ID
+        LEFT JOIN UNITS u ON c.UNIT_ID = u.ID
+        LEFT JOIN BUILDINGS b ON u.BUILDING_ID = b.ID
+        LEFT JOIN USERS usr ON p.USER_ID = usr.ID
+        WHERE p.USER_ID = #{userId}
+        AND p.PAYMENT_CATEGORY IN ('RENT', 'MANAGEMENT_FEE')
+        AND p.STATUS = 'COMPLETED'
+        ORDER BY p.PAID_DATE DESC, p.CREATED_AT DESC
+    </select>
+
+    <!-- 사용자별 카테고리별 결제 내역 조회 -->
+    <select id="findPaymentHistoryByUserIdAndCategory" resultMap="PaymentWithDetailsResultMap">
+        SELECT
+            p.*,
+            u.UNIT_NUMBER,
+            b.NAME,
+            usr.NAME AS USER_NAME
+        FROM PAYMENTS p
+        LEFT JOIN CONTRACTS c ON p.CONTRACT_ID = c.ID
+        LEFT JOIN UNITS u ON c.UNIT_ID = u.ID
+        LEFT JOIN BUILDINGS b ON u.BUILDING_ID = b.ID
+        LEFT JOIN USERS usr ON p.USER_ID = usr.ID
+        WHERE p.USER_ID = #{userId}
+        AND p.PAYMENT_CATEGORY = #{paymentCategory}
+        AND p.STATUS = 'COMPLETED'
+        ORDER BY p.PAID_DATE DESC, p.CREATED_AT DESC
+    </select>
+
+    <!-- 하나은행 거래ID로 결제 내역 조회 -->
+    <select id="findByHanaBankTransactionId" resultMap="PaymentWithDetailsResultMap">
+        SELECT
+            p.*,
+            u.UNIT_NUMBER,
+            b.NAME,
+            usr.NAME AS USER_NAME
+        FROM PAYMENTS p
+        LEFT JOIN CONTRACTS c ON p.CONTRACT_ID = c.ID
+        LEFT JOIN UNITS u ON c.UNIT_ID = u.ID
+        LEFT JOIN BUILDINGS b ON u.BUILDING_ID = b.ID
+        LEFT JOIN USERS usr ON p.USER_ID = usr.ID
+        WHERE p.HANA_BANK_TRANSACTION_ID = #{hanaBankTransactionId}
+    </select>
+
+</mapper>

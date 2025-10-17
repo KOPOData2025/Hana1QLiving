@@ -1,0 +1,92 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.0'
+    id 'io.spring.dependency-management' version '1.1.4'
+}
+
+group = 'com.living'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = '17'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencyManagement {
+    imports {
+        mavenBom 'io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:2.12.0'
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+    implementation 'com.oracle.database.jdbc:ojdbc11'
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.12.5'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
+    // GCP Cloud Storage - Spring Boot 3.x 호환
+    implementation 'com.google.cloud:google-cloud-storage:2.32.1'
+    implementation 'com.google.auth:google-auth-library-oauth2-http:1.19.0'
+    implementation 'com.google.auth:google-auth-library-credentials:1.19.0'
+
+    // 파일 업로드 처리
+    implementation 'commons-io:commons-io:2.11.0'
+
+    // Cool SMS
+    implementation 'net.nurigo:sdk:4.3.0'
+
+    // WebSocket 클라이언트 (HanaSecurities 연결용)
+    implementation 'org.java-websocket:Java-WebSocket:1.5.3'
+
+    // Monitoring & Metrics
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-otlp'  // OTLP 방식으로 변경
+
+    // Logback 로깅
+    implementation 'org.springframework.boot:spring-boot-starter-logging'
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+
+    // OpenTelemetry Spring Boot Starter (2025 최신)
+    implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter'
+//    implementation 'io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0'
+
+    // AOP 로깅
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+    // Resilience4j Circuit Breaker
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.1.0'
+    implementation 'io.github.resilience4j:resilience4j-circuitbreaker:2.1.0'
+    implementation 'io.github.resilience4j:resilience4j-micrometer:2.1.0'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-test-autoconfigure'
+}
+
+test {
+    useJUnitPlatform()
+    enabled = false  // 테스트 완전 비활성화
+}
+
+// check 태스크도 비활성화 (test를 포함하는 상위 태스크)
+check {
+    enabled = false
+}

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.hana_bank.mapper.LoanContractMapper">
+
+    <!-- LoanContract 결과 맵 (최종 정리) -->
+    <resultMap id="LoanContractResultMap" type="com.example.hana_bank.entity.LoanContract">
+        <id property="id" column="id"/>
+        <result property="applicationReferenceId" column="application_reference_id"/>
+        <result property="contractNumber" column="contract_number"/>
+        <result property="loanAmount" column="loan_amount"/>
+        <result property="loanPurpose" column="loan_purpose"/>
+        <result property="scheduledDate" column="scheduled_date"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 대출 계약 정보 삽입 (간소화) -->
+    <insert id="insertLoanContract" parameterType="com.example.hana_bank.entity.LoanContract">
+        <selectKey keyProperty="id" resultType="Long" order="BEFORE">
+            SELECT LOAN_CONTRACT_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO LOAN_CONTRACTS (
+            ID, APPLICATION_REFERENCE_ID, CONTRACT_NUMBER, LOAN_AMOUNT, LOAN_PURPOSE,
+            SCHEDULED_DATE, STATUS, CREATED_AT, UPDATED_AT
+        ) VALUES (
+            #{id}, #{applicationReferenceId,jdbcType=VARCHAR}, #{contractNumber,jdbcType=VARCHAR}, #{loanAmount,jdbcType=DECIMAL}, #{loanPurpose,jdbcType=VARCHAR},
+            #{scheduledDate,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, #{createdAt,jdbcType=VARCHAR}, #{updatedAt,jdbcType=VARCHAR}
+        )
+    </insert>
+
+    <!-- 모든 대출 계약 조회 -->
+    <select id="findAllLoanContracts" resultMap="LoanContractResultMap">
+        SELECT * FROM LOAN_CONTRACTS 
+        ORDER BY CREATED_AT DESC
+    </select>
+
+    <!-- OneQ 참조번호로 대출 계약 조회 (제거됨 - 계약번호로만 조회) -->
+
+    <!-- 계약번호로 대출 계약 조회 -->
+    <select id="findByContractNumber" parameterType="String" resultMap="LoanContractResultMap">
+        SELECT * FROM LOAN_CONTRACTS 
+        WHERE CONTRACT_NUMBER = #{contractNumber}
+    </select>
+
+    <!-- 계약 상태 업데이트 -->
+    <update id="updateContractStatus">
+        UPDATE LOAN_CONTRACTS 
+        SET STATUS = #{status}, UPDATED_AT = SYSDATE 
+        WHERE ID = #{contractId}
+    </update>
+
+    <!-- 상태별 대출 계약 조회 -->
+    <select id="findByStatus" parameterType="String" resultMap="LoanContractResultMap">
+        SELECT * FROM LOAN_CONTRACTS 
+        WHERE STATUS = #{status}
+        ORDER BY CREATED_AT DESC
+    </select>
+
+    <!-- 예약일별 대출 계약 조회 -->
+    <select id="findByScheduledDate" parameterType="String" resultMap="LoanContractResultMap">
+        SELECT * FROM LOAN_CONTRACTS 
+        WHERE SCHEDULED_DATE = #{scheduledDate}
+        ORDER BY CREATED_AT
+    </select>
+
+    <!-- applicationReferenceId로 대출 계약 조회 -->
+    <select id="findByOneQReference" parameterType="String" resultMap="LoanContractResultMap">
+        SELECT * FROM LOAN_CONTRACTS 
+        WHERE APPLICATION_REFERENCE_ID = #{applicationId}
+    </select>
+
+</mapper>

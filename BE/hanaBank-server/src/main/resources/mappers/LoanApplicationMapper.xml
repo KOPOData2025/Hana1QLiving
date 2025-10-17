@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.hana_bank.mapper.LoanApplicationMapper">
+
+    <!-- 대출 신청 저장 -->
+    <insert id="insertLoanApplication" parameterType="com.example.hana_bank.entity.LoanApplication">
+        INSERT INTO loan_applications (
+            application_id, application_number, user_ci, address, selected_loan_product, status,
+            submitted_at, updated_at, reviewer_id, review_date, decision,
+            review_comments, approved_amount, interest_rate
+            <if test="loanTerm != null">, loan_term</if>
+        ) VALUES (
+            LOAN_APPLICATION_SEQ.NEXTVAL, #{applicationNumber,jdbcType=VARCHAR}, #{userCi,jdbcType=VARCHAR}, #{address,jdbcType=VARCHAR}, #{selectedLoanProduct,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR},
+            #{submittedAt,jdbcType=TIMESTAMP}, #{updatedAt,jdbcType=TIMESTAMP}, #{reviewerId,jdbcType=VARCHAR}, #{reviewDate,jdbcType=TIMESTAMP}, #{decision,jdbcType=VARCHAR},
+            #{reviewComments,jdbcType=VARCHAR}, #{approvedAmount,jdbcType=NUMERIC}, #{interestRate,jdbcType=NUMERIC}
+            <if test="loanTerm != null">, #{loanTerm,jdbcType=NUMERIC}</if>
+        )
+        <selectKey keyProperty="applicationId" resultType="long" order="AFTER">
+            SELECT LOAN_APPLICATION_SEQ.CURRVAL FROM DUAL
+        </selectKey>
+    </insert>
+
+    <!-- 대출 신청 서류 저장 -->
+    <insert id="insertLoanApplicationDocument" parameterType="com.example.hana_bank.entity.LoanApplicationDocument">
+        INSERT INTO loan_application_documents (
+            document_id, application_id, document_type, file_url, file_name, uploaded_at
+        ) VALUES (
+            LOAN_APPLICATION_DOCUMENT_SEQ.NEXTVAL, #{applicationId,jdbcType=NUMERIC}, #{documentType,jdbcType=VARCHAR}, #{fileUrl,jdbcType=VARCHAR}, #{fileName,jdbcType=VARCHAR}, #{uploadedAt,jdbcType=TIMESTAMP}
+        )
+    </insert>
+
+    <!-- 대출 신청 목록 조회 -->
+    <select id="selectLoanApplicationList" resultType="com.example.hana_bank.entity.LoanApplication">
+        SELECT
+            la.application_id, la.application_number, la.user_ci, la.address, la.selected_loan_product, la.status,
+            la.submitted_at, la.updated_at, la.reviewer_id, la.review_date, la.decision,
+            la.review_comments, la.approved_amount, la.interest_rate,
+            NVL(la.loan_term, 24) as loan_term
+        FROM loan_applications la
+        ORDER BY la.submitted_at DESC
+    </select>
+
+    <!-- 대출 신청 상세 조회 -->
+    <select id="selectLoanApplicationById" parameterType="long" resultType="com.example.hana_bank.entity.LoanApplication">
+        SELECT
+            la.application_id, la.application_number, la.user_ci, la.address, la.selected_loan_product, la.status,
+            la.submitted_at, la.updated_at, la.reviewer_id, la.review_date, la.decision,
+            la.review_comments, la.approved_amount, la.interest_rate,
+            NVL(la.loan_term, 24) as loan_term
+        FROM loan_applications la
+        WHERE la.application_id = #{applicationId}
+    </select>
+
+    <!-- 대출 신청 서류 목록 조회 -->
+    <select id="selectDocumentsByApplicationId" parameterType="long" resultType="com.example.hana_bank.entity.LoanApplicationDocument">
+        SELECT 
+            document_id, application_id, document_type, file_url, file_name, uploaded_at
+        FROM loan_application_documents
+        WHERE application_id = #{applicationId}
+        ORDER BY uploaded_at ASC
+    </select>
+
+    <!-- 대출 신청 상태 업데이트 (검토 정보 포함) -->
+    <update id="updateLoanApplicationStatus">
+        UPDATE loan_applications SET
+            status = #{status,jdbcType=VARCHAR},
+            reviewer_id = #{reviewerId,jdbcType=VARCHAR},
+            review_date = SYSTIMESTAMP,
+            decision = #{decision,jdbcType=VARCHAR},
+            review_comments = #{comments,jdbcType=VARCHAR},
+            approved_amount = #{approvedAmount,jdbcType=NUMERIC},
+            interest_rate = #{interestRate,jdbcType=NUMERIC}
+            <if test="loanTerm != null">,
+            loan_term = #{loanTerm,jdbcType=NUMERIC}
+            </if>,
+            updated_at = SYSTIMESTAMP
+        WHERE application_id = #{applicationId,jdbcType=NUMERIC}
+    </update>
+
+</mapper>

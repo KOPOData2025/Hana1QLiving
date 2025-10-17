@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.living.hana.mapper.RentPaymentRecordMapper">
+
+    <!-- 월세 결제 기록 결과 매핑 -->
+    <resultMap id="RentPaymentRecordMap" type="com.living.hana.entity.RentPaymentRecord">
+        <id property="id" column="id"/>
+        <result property="contractId" column="contract_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="unitId" column="unit_id"/>
+        <result property="amount" column="amount"/>
+        <result property="paymentDate" column="payment_date"/>
+        <result property="hanabankTransactionId" column="hanabank_transaction_id"/>
+        <result property="fromAccount" column="from_account"/>
+        <result property="toAccount" column="to_account"/>
+        <result property="status" column="status"/>
+        <result property="failureReason" column="failure_reason"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <!-- 조인용 필드들 -->
+        <result property="userName" column="user_name"/>
+        <result property="unitNumber" column="unit_number"/>
+        <result property="buildingName" column="building_name"/>
+        <result property="floor" column="floor"/>
+    </resultMap>
+
+    <!-- 월세 결제 기록 생성 -->
+    <insert id="insert" parameterType="com.living.hana.entity.RentPaymentRecord">
+        <selectKey keyProperty="id" resultType="Long" order="BEFORE">
+            SELECT rent_payment_records_seq.NEXTVAL FROM dual
+        </selectKey>
+        INSERT INTO rent_payment_records (
+            id, contract_id, user_id, unit_id, amount, payment_date,
+            hanabank_transaction_id, from_account, to_account, status,
+            failure_reason, created_at, updated_at
+        ) VALUES (
+            #{id}, #{contractId}, #{userId}, #{unitId}, #{amount}, #{paymentDate},
+            #{hanabankTransactionId}, #{fromAccount}, #{toAccount}, #{status},
+            #{failureReason}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- ID로 조회 -->
+    <select id="findById" parameterType="Long" resultMap="RentPaymentRecordMap">
+        SELECT
+            r.*,
+            u.name as user_name,
+            un.unit_number,
+            b.name as building_name,
+            un.floor
+        FROM rent_payment_records r
+        LEFT JOIN users u ON r.user_id = u.id
+        LEFT JOIN units un ON r.unit_id = un.id
+        LEFT JOIN buildings b ON un.building_id = b.id
+        WHERE r.id = #{id}
+    </select>
+
+    <!-- 사용자별 월세 결제 이력 조회 (상세 정보 포함) -->
+    <select id="findByUserIdWithDetails" parameterType="Long" resultMap="RentPaymentRecordMap">
+        SELECT
+            r.*,
+            u.name as user_name,
+            un.unit_number,
+            b.name as building_name,
+            un.floor
+        FROM rent_payment_records r
+        LEFT JOIN users u ON r.user_id = u.id
+        LEFT JOIN units un ON r.unit_id = un.id
+        LEFT JOIN buildings b ON un.building_id = b.id
+        WHERE r.user_id = #{userId}
+        ORDER BY r.payment_date DESC, r.created_at DESC
+    </select>
+
+    <!-- 계약별 월세 결제 이력 조회 -->
+    <select id="findByContractId" parameterType="Long" resultMap="RentPaymentRecordMap">
+        SELECT
+            r.*,
+            u.name as user_name,
+            un.unit_number,
+            b.name as building_name,
+            un.floor
+        FROM rent_payment_records r
+        LEFT JOIN users u ON r.user_id = u.id
+        LEFT JOIN units un ON r.unit_id = un.id
+        LEFT JOIN buildings b ON un.building_id = b.id
+        WHERE r.contract_id = #{contractId}
+        ORDER BY r.payment_date DESC, r.created_at DESC
+    </select>
+
+    <!-- 호실별 월세 결제 이력 조회 -->
+    <select id="findByUnitId" parameterType="Long" resultMap="RentPaymentRecordMap">
+        SELECT
+            r.*,
+            u.name as user_name,
+            un.unit_number,
+            b.name as building_name,
+            un.floor
+        FROM rent_payment_records r
+        LEFT JOIN users u ON r.user_id = u.id
+        LEFT JOIN units un ON r.unit_id = un.id
+        LEFT JOIN buildings b ON un.building_id = b.id
+        WHERE r.unit_id = #{unitId}
+        ORDER BY r.payment_date DESC, r.created_at DESC
+    </select>
+
+    <!-- 하나은행 거래번호로 조회 -->
+    <select id="findByHanabankTransactionId" parameterType="String" resultMap="RentPaymentRecordMap">
+        SELECT
+            r.*,
+            u.name as user_name,
+            un.unit_number,
+            b.name as building_name,
+            un.floor
+        FROM rent_payment_records r
+        LEFT JOIN users u ON r.user_id = u.id
+        LEFT JOIN units un ON r.unit_id = un.id
+        LEFT JOIN buildings b ON un.building_id = b.id
+        WHERE r.hanabank_transaction_id = #{hanabankTransactionId}
+    </select>
+
+    <!-- 하나은행 거래번호 존재 여부 확인 -->
+    <select id="existsByHanabankTransactionId" parameterType="String" resultType="boolean">
+        SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
+        FROM rent_payment_records
+        WHERE hanabank_transaction_id = #{hanabankTransactionId}
+    </select>
+
+    <!-- 기간별 월세 결제 이력 조회 -->
+    <select id="findByDateRange" resultMap="RentPaymentRecordMap">
+        SELECT
+            r.*,
+            u.name as user_name,
+            un.unit_number,
+            b.name as building_name,
+            un.floor
+        FROM rent_payment_records r
+        LEFT JOIN users u ON r.user_id = u.id
+        LEFT JOIN units un ON r.unit_id = un.id
+        LEFT JOIN buildings b ON un.building_id = b.id
+        WHERE r.payment_date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY r.payment_date DESC, r.created_at DESC
+    </select>
+
+    <!-- 사용자별 기간별 월세 결제 이력 조회 -->
+    <select id="findByUserIdAndDateRange" resultMap="RentPaymentRecordMap">
+        SELECT
+            r.*,
+            u.name as user_name,
+            un.unit_number,
+            b.name as building_name,
+            un.floor
+        FROM rent_payment_records r
+        LEFT JOIN users u ON r.user_id = u.id
+        LEFT JOIN units un ON r.unit_id = un.id
+        LEFT JOIN buildings b ON un.building_id = b.id
+        WHERE r.user_id = #{userId}
+        AND r.payment_date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY r.payment_date DESC, r.created_at DESC
+    </select>
+
+    <!-- 상태별 월세 결제 이력 조회 -->
+    <select id="findByStatus" parameterType="String" resultMap="RentPaymentRecordMap">
+        SELECT
+            r.*,
+            u.name as user_name,
+            un.unit_number,
+            b.name as building_name,
+            un.floor
+        FROM rent_payment_records r
+        LEFT JOIN users u ON r.user_id = u.id
+        LEFT JOIN units un ON r.unit_id = un.id
+        LEFT JOIN buildings b ON un.building_id = b.id
+        WHERE r.status = #{status}
+        ORDER BY r.payment_date DESC, r.created_at DESC
+    </select>
+
+    <!-- 월세 결제 기록 수정 -->
+    <update id="update" parameterType="com.living.hana.entity.RentPaymentRecord">
+        UPDATE rent_payment_records SET
+            contract_id = #{contractId},
+            user_id = #{userId},
+            unit_id = #{unitId},
+            amount = #{amount},
+            payment_date = #{paymentDate},
+            hanabank_transaction_id = #{hanabankTransactionId},
+            from_account = #{fromAccount},
+            to_account = #{toAccount},
+            status = #{status},
+            failure_reason = #{failureReason},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <!-- 상태 업데이트 -->
+    <update id="updateStatus">
+        UPDATE rent_payment_records SET
+            status = #{status},
+            failure_reason = #{failureReason},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <!-- 하나은행 거래번호 업데이트 -->
+    <update id="updateHanabankTransactionId">
+        UPDATE rent_payment_records SET
+            hanabank_transaction_id = #{hanabankTransactionId},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <!-- ID로 삭제 -->
+    <delete id="deleteById" parameterType="Long">
+        DELETE FROM rent_payment_records WHERE id = #{id}
+    </delete>
+
+    <!-- 전체 개수 조회 -->
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM rent_payment_records
+    </select>
+
+    <!-- 사용자별 개수 조회 -->
+    <select id="countByUserId" parameterType="Long" resultType="long">
+        SELECT COUNT(*) FROM rent_payment_records WHERE user_id = #{userId}
+    </select>
+
+    <!-- 상태별 개수 조회 -->
+    <select id="countByStatus" parameterType="String" resultType="long">
+        SELECT COUNT(*) FROM rent_payment_records WHERE status = #{status}
+    </select>
+
+</mapper>

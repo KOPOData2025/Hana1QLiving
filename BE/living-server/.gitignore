@@ -1,0 +1,102 @@
+HELP.md
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+# GCP/AWS 인증 정보 (보안상 중요)
+src/main/resources/clear-nebula-468908-k3-909ee1ce2174.json
+src/main/resources/*-key.json
+src/main/resources/*-credentials.json
+**/service-account*.json
+**/credentials*.json
+**/*-key.json
+
+# 환경 설정 파일
+.env
+.env.local
+.env.production
+
+# 로그 파일
+*.log
+logs/
+
+# 임시 파일
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# OS 생성 파일
+.DS_Store
+Thumbs.db
+
+# 데이터베이스 파일
+*.db
+*.sqlite
+*.sqlite3
+
+# 백업 파일
+*.bak
+*.backup
+
+# Spring Boot 특화 파일
+application-local.yml
+application-dev.yml
+application-prod.yml
+application.yml
+
+# Maven 래퍼 (gradle 프로젝트에서는 불필요하지만)
+.mvn/
+mvnw
+mvnw.cmd
+
+# Gradle 캐시
+.gradle/
+gradle/
+
+# 테스트 결과
+test-results/
+test-output/
+
+# 프로파일링 결과
+*.hprof
+
+# Docker 관련
+.dockerignore
+Dockerfile.local
+
+# nul
+nul

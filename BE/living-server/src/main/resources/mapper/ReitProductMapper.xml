@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.living.hana.mapper.ReitProductMapper">
+
+    <!-- REIT 상품 결과 매핑 -->
+    <resultMap id="ReitProductResultMap" type="com.living.hana.entity.ReitProduct">
+        <id property="productCode" column="product_code"/>
+        <result property="productName" column="product_name"/>
+        <result property="stockExchange" column="stock_exchange"/>
+        <result property="listingDate" column="listing_date"/>
+        <result property="totalShares" column="total_shares"/>
+        <result property="managementFee" column="management_fee"/>
+        <result property="description" column="description"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 전체 REIT 상품 조회 -->
+    <select id="findAll" resultMap="ReitProductResultMap">
+        SELECT product_code, product_name, stock_exchange, listing_date, total_shares,
+               management_fee, description, created_at, updated_at
+        FROM reit_products
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 상품 코드로 REIT 상품 조회 -->
+    <select id="findByProductCode" parameterType="string" resultMap="ReitProductResultMap">
+        SELECT product_code, product_name, stock_exchange, listing_date, total_shares,
+               management_fee, description, created_at, updated_at
+        FROM reit_products
+        WHERE product_code = #{productCode}
+    </select>
+
+    <!-- 거래소별 REIT 상품 조회 -->
+    <select id="findByStockExchange" parameterType="string" resultMap="ReitProductResultMap">
+        SELECT product_code, product_name, stock_exchange, listing_date, total_shares,
+               management_fee, description, created_at, updated_at
+        FROM reit_products
+        WHERE stock_exchange = #{stockExchange}
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- REIT 상품 등록 -->
+    <insert id="insertReitProduct" parameterType="com.living.hana.entity.ReitProduct">
+        INSERT INTO reit_products (
+            product_code, product_name, stock_exchange, listing_date, total_shares, management_fee,
+            description, created_at, updated_at
+        ) VALUES (
+            #{productCode}, #{productName}, #{stockExchange}, #{listingDate}, #{totalShares}, #{managementFee},
+            #{description}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- REIT 상품 수정 -->
+    <update id="updateReitProduct" parameterType="com.living.hana.entity.ReitProduct">
+        UPDATE reit_products SET
+            product_name = #{productName},
+            stock_exchange = #{stockExchange},
+            listing_date = #{listingDate},
+            total_shares = #{totalShares},
+            management_fee = #{managementFee},
+            description = #{description},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE product_code = #{productCode}
+    </update>
+
+    <!-- REIT 상품 삭제 -->
+    <delete id="deleteReitProduct" parameterType="string">
+        DELETE FROM reit_products
+        WHERE product_code = #{productCode}
+    </delete>
+
+    <!-- 상품명으로 검색 -->
+    <select id="findByProductNameContaining" parameterType="string" resultMap="ReitProductResultMap">
+        SELECT product_code, product_name, stock_exchange, listing_date, total_shares,
+               management_fee, description, created_at, updated_at
+        FROM reit_products
+        WHERE product_name LIKE '%' || #{keyword} || '%'
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- === 배당 계산을 위한 새로운 쿼리들 === -->
+
+    <!-- REIT 상품에 포함된 활성 건물 ID 목록 조회 -->
+    <select id="getActiveBuildingIdsByProductCode" parameterType="string" resultType="java.lang.Long">
+        SELECT rbm.building_id
+        FROM reit_building_mappings rbm
+        WHERE rbm.product_code = #{productCode}
+          AND rbm.exclusion_date IS NULL
+        ORDER BY rbm.inclusion_date
+    </select>
+
+    <!-- 특정 건물의 기간별 임대수익 합계 조회 -->
+    <select id="getBuildingRentalIncome" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(rpr.amount), 0) as total_income
+        FROM rent_payment_records rpr
+        JOIN units u ON rpr.unit_id = u.id
+        WHERE u.building_id = #{buildingId}
+          AND rpr.status = 'COMPLETED'
+          AND TRUNC(rpr.payment_date) BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+    </select>
+
+    <!-- 특정 건물의 기간별 운영비용 합계 조회 (건물별 비용만) -->
+    <select id="getBuildingExpenses" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(e.amount), 0) as total_expenses
+        FROM expenses e
+        WHERE e.building_id = #{buildingId}
+          AND TO_DATE(e.expense_date, 'YY/MM/DD') BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+    </select>
+
+    <!-- REIT에 포함된 모든 건물의 공통 운영비용 조회 -->
+    <select id="getCommonExpenses" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(e.amount), 0) as total_expenses
+        FROM expenses e
+        WHERE e.building_id IS NULL
+          AND TO_DATE(e.expense_date, 'YY/MM/DD') BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+    </select>
+
+</mapper>

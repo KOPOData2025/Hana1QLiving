@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.hana_bank.mapper.AutoTransferHistoryMapper">
+    
+    <resultMap id="autoTransferHistoryResultMap" type="com.example.hana_bank.entity.AutoTransferHistory">
+        <id property="id" column="id"/>
+        <result property="contractId" column="contract_id"/>
+        <result property="executionDate" column="execution_date"/>
+        <result property="scheduledDate" column="scheduled_date"/>
+        <result property="amount" column="amount"/>
+        <result property="status" column="status"/>
+        <result property="failureReason" column="failure_reason"/>
+        <result property="transactionId" column="transaction_id"/>
+        <result property="retryCount" column="retry_count"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="fromAccount" column="from_account"/>
+        <result property="toAccount" column="to_account"/>
+    </resultMap>
+    
+    <!-- 자동이체 실행 이력 등록 -->
+    <insert id="insertAutoTransferHistory" parameterType="com.example.hana_bank.entity.AutoTransferHistory">
+        <selectKey keyProperty="id" resultType="Long" order="BEFORE">
+            SELECT NVL(MAX(id), 0) + 1 FROM auto_transfer_history
+        </selectKey>
+        INSERT INTO auto_transfer_history (
+            id, contract_id, execution_date, scheduled_date, amount, status,
+            failure_reason, transaction_id, retry_count, created_at,
+            from_account, to_account
+        ) VALUES (
+            #{id}, #{contractId}, #{executionDate}, #{scheduledDate}, #{amount}, #{status},
+            #{failureReason,jdbcType=VARCHAR}, #{transactionId,jdbcType=VARCHAR}, #{retryCount}, CURRENT_TIMESTAMP,
+            #{fromAccount}, #{toAccount}
+        )
+    </insert>
+    
+    <!-- ID로 실행 이력 조회 -->
+    <select id="findById" parameterType="long" resultMap="autoTransferHistoryResultMap">
+        SELECT * FROM auto_transfer_history WHERE id = #{id}
+    </select>
+    
+    <!-- 전체 실행 이력 조회 -->
+    <select id="findAll" resultMap="autoTransferHistoryResultMap">
+        SELECT * FROM auto_transfer_history ORDER BY execution_date DESC
+    </select>
+    
+    <!-- 실행 이력 업데이트 -->
+    <update id="updateAutoTransferHistory" parameterType="com.example.hana_bank.entity.AutoTransferHistory">
+        UPDATE auto_transfer_history SET
+            contract_id = #{contractId},
+            execution_date = #{executionDate},
+            scheduled_date = #{scheduledDate},
+            amount = #{amount},
+            status = #{status},
+            failure_reason = #{failureReason},
+            transaction_id = #{transactionId},
+            retry_count = #{retryCount}
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 실행 이력 삭제 -->
+    <delete id="deleteById" parameterType="long">
+        DELETE FROM auto_transfer_history WHERE id = #{id}
+    </delete>
+    
+    <!-- 계약별 실행 이력 조회 -->
+    <select id="findByContractId" parameterType="long" resultMap="autoTransferHistoryResultMap">
+        SELECT * FROM auto_transfer_history 
+        WHERE contract_id = #{contractId} 
+        ORDER BY execution_date DESC
+    </select>
+    
+    <!-- 상태별 실행 이력 조회 -->
+    <select id="findByStatus" parameterType="string" resultMap="autoTransferHistoryResultMap">
+        SELECT * FROM auto_transfer_history 
+        WHERE status = #{status} 
+        ORDER BY execution_date DESC
+    </select>
+    
+    <!-- 실행일 범위별 조회 -->
+    <select id="findByExecutionDateRange" resultMap="autoTransferHistoryResultMap">
+        SELECT * FROM auto_transfer_history 
+        WHERE execution_date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY execution_date DESC
+    </select>
+    
+    <!-- 예정일 범위별 조회 -->
+    <select id="findByScheduledDateRange" resultMap="autoTransferHistoryResultMap">
+        SELECT * FROM auto_transfer_history 
+        WHERE scheduled_date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY scheduled_date DESC
+    </select>
+    
+    <!-- 계약별 최근 실행 이력 조회 -->
+    <select id="findLatestByContractId" parameterType="long" resultMap="autoTransferHistoryResultMap">
+        SELECT * FROM auto_transfer_history 
+        WHERE contract_id = #{contractId} 
+        ORDER BY execution_date DESC 
+        FETCH FIRST 1 ROWS ONLY
+    </select>
+    
+    <!-- 계약별 성공한 실행 이력 조회 -->
+    <select id="findSuccessHistoryByContractId" parameterType="long" resultMap="autoTransferHistoryResultMap">
+        SELECT * FROM auto_transfer_history 
+        WHERE contract_id = #{contractId} 
+        AND status = 'SUCCESS'
+        ORDER BY execution_date DESC
+    </select>
+    
+    <!-- 계약별 실패한 실행 이력 조회 -->
+    <select id="findFailedHistoryByContractId" parameterType="long" resultMap="autoTransferHistoryResultMap">
+        SELECT * FROM auto_transfer_history 
+        WHERE contract_id = #{contractId} 
+        AND status = 'FAILED'
+        ORDER BY execution_date DESC
+    </select>
+    
+    <!-- 재시도 가능한 실패 이력 조회 -->
+    <select id="findRetryableFailedHistory" resultMap="autoTransferHistoryResultMap">
+        SELECT * FROM auto_transfer_history 
+        WHERE status = 'FAILED' 
+        AND retry_count &lt; 3
+        ORDER BY execution_date ASC
+    </select>
+    
+    <!-- 특정 날짜의 실행 이력 조회 -->
+    <select id="findByExecutionDate" parameterType="java.time.LocalDate" resultMap="autoTransferHistoryResultMap">
+        SELECT * FROM auto_transfer_history 
+        WHERE TRUNC(execution_date) = #{executionDate}
+        ORDER BY execution_date DESC
+    </select>
+    
+    <!-- 특정 예정일의 실행 이력 조회 -->
+    <select id="findByScheduledDate" parameterType="java.time.LocalDate" resultMap="autoTransferHistoryResultMap">
+        SELECT * FROM auto_transfer_history 
+        WHERE scheduled_date = #{scheduledDate}
+        ORDER BY execution_date DESC
+    </select>
+    
+    <!-- 거래번호로 실행 이력 조회 -->
+    <select id="findByTransactionId" parameterType="string" resultMap="autoTransferHistoryResultMap">
+        SELECT * FROM auto_transfer_history 
+        WHERE transaction_id = #{transactionId}
+    </select>
+    
+    <!-- 계약별 실행 이력 개수 조회 -->
+    <select id="countByContractId" parameterType="long" resultType="int">
+        SELECT COUNT(1) FROM auto_transfer_history WHERE contract_id = #{contractId}
+    </select>
+    
+    <!-- 상태별 실행 이력 개수 조회 -->
+    <select id="countByStatus" parameterType="string" resultType="int">
+        SELECT COUNT(1) FROM auto_transfer_history WHERE status = #{status}
+    </select>
+    
+    <!-- 계약별 상태별 실행 이력 개수 조회 -->
+    <select id="countByContractIdAndStatus" resultType="int">
+        SELECT COUNT(1) FROM auto_transfer_history 
+        WHERE contract_id = #{contractId} 
+        AND status = #{status}
+    </select>
+    
+    <!-- 특정 기간의 성공률 조회 (통계용) -->
+    <select id="getSuccessRateByDateRange" resultType="double">
+        SELECT 
+            CASE 
+                WHEN COUNT(1) = 0 THEN 0
+                ELSE ROUND(SUM(CASE WHEN status = 'SUCCESS' THEN 1 ELSE 0 END) * 100.0 / COUNT(1), 2)
+            END as success_rate
+        FROM auto_transfer_history 
+        WHERE scheduled_date BETWEEN #{startDate} AND #{endDate}
+    </select>
+    
+    <!-- 재시도 횟수 업데이트 -->
+    <update id="updateRetryCount">
+        UPDATE auto_transfer_history 
+        SET retry_count = #{retryCount}
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 실행 결과 업데이트 (성공) -->
+    <update id="updateAsSuccess">
+        UPDATE auto_transfer_history 
+        SET status = 'SUCCESS',
+            transaction_id = #{transactionId},
+            failure_reason = NULL
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 실행 결과 업데이트 (실패) -->
+    <update id="updateAsFailed">
+        UPDATE auto_transfer_history 
+        SET status = 'FAILED',
+            failure_reason = #{failureReason},
+            transaction_id = NULL
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 페이징을 위한 계약별 실행 이력 조회 -->
+    <select id="findByContractIdWithPaging" resultMap="autoTransferHistoryResultMap">
+        SELECT * FROM (
+            SELECT h.*, ROW_NUMBER() OVER (ORDER BY execution_date DESC) as rn
+            FROM auto_transfer_history h
+            WHERE contract_id = #{contractId}
+        ) 
+        WHERE rn BETWEEN #{offset} + 1 AND #{offset} + #{limit}
+    </select>
+    
+    <!-- 사용자별 실행 이력 조회 (계약 테이블과 조인) -->
+    <select id="findByUserCi" parameterType="string" resultMap="autoTransferHistoryResultMap">
+        SELECT h.* 
+        FROM auto_transfer_history h
+        JOIN auto_transfer_contracts c ON h.contract_id = c.id
+        WHERE c.user_ci = #{userCi}
+        ORDER BY h.execution_date DESC
+    </select>
+    
+</mapper>

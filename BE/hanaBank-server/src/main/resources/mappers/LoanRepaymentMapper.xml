@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.hana_bank.mapper.LoanRepaymentMapper">
+    
+    <resultMap id="loanRepaymentResultMap" type="com.example.hana_bank.entity.LoanRepayment">
+        <id property="repaymentId" column="repayment_id"/>
+        <result property="loanId" column="loan_id"/>
+        <result property="repaymentAmount" column="repayment_amount"/>
+        <result property="principalAmount" column="principal_amount"/>
+        <result property="interestAmount" column="interest_amount"/>
+        <result property="repaymentDate" column="repayment_date"/>
+        <result property="paymentMethod" column="payment_method"/>
+        <result property="status" column="status"/>
+    </resultMap>
+    
+    <insert id="insertLoanRepayment" parameterType="com.example.hana_bank.entity.LoanRepayment">
+        <selectKey keyProperty="repaymentId" resultType="long" order="BEFORE">
+            SELECT LOAN_REPAYMENT_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO loan_repayments (
+            repayment_id, loan_id, repayment_amount, principal_amount, 
+            interest_amount, repayment_date, payment_method, status
+        ) VALUES (
+            #{repaymentId}, #{loanId}, #{repaymentAmount}, #{principalAmount},
+            #{interestAmount}, #{repaymentDate}, #{paymentMethod}, #{status}
+        )
+    </insert>
+    
+    <select id="findById" parameterType="long" resultMap="loanRepaymentResultMap">
+        SELECT * FROM loan_repayments WHERE repayment_id = #{repaymentId}
+    </select>
+    
+    <select id="findByLoanId" parameterType="long" resultMap="loanRepaymentResultMap">
+        SELECT * FROM loan_repayments WHERE loan_id = #{loanId} ORDER BY repayment_date DESC
+    </select>
+    
+    <select id="findAll" resultMap="loanRepaymentResultMap">
+        SELECT * FROM loan_repayments ORDER BY repayment_date DESC
+    </select>
+    
+    <update id="updateLoanRepayment" parameterType="com.example.hana_bank.entity.LoanRepayment">
+        UPDATE loan_repayments SET
+            status = #{status}
+        WHERE repayment_id = #{repaymentId}
+    </update>
+    
+    <delete id="deleteLoanRepayment" parameterType="long">
+        DELETE FROM loan_repayments WHERE repayment_id = #{repaymentId}
+    </delete>
+    
+</mapper>

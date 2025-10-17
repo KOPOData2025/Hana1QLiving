@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.living.hana.mapper.ManagementFeeChargeMapper">
+
+    <!-- 관리비 청구 생성 -->
+    <insert id="insertManagementFeeCharge" parameterType="com.living.hana.entity.ManagementFeeCharge">
+        INSERT INTO MANAGEMENT_FEE_CHARGES (
+            UNIT_ID, CHARGED_BY_USER_ID, CHARGE_AMOUNT, CHARGE_DESCRIPTION,
+            CHARGE_DATE, DUE_DATE, STATUS, AUTO_PAYMENT_TRIGGERED,
+            CREATED_AT, UPDATED_AT
+        ) VALUES (
+            #{unitId}, #{chargedByUserId}, #{chargeAmount}, #{chargeDescription},
+            #{chargeDate}, #{dueDate}, #{status}, #{autoPaymentTriggered},
+            #{createdAt}, #{updatedAt}
+        )
+        <selectKey keyProperty="id" resultType="Long" order="AFTER">
+            SELECT ID FROM MANAGEMENT_FEE_CHARGES WHERE ROWNUM = 1 ORDER BY ID DESC
+        </selectKey>
+    </insert>
+
+    <!-- 관리비 청구 조회 (ID로) -->
+    <select id="selectManagementFeeChargeById" parameterType="Long" resultType="com.living.hana.entity.ManagementFeeCharge">
+        SELECT
+            ID, UNIT_ID, CHARGED_BY_USER_ID, CHARGE_AMOUNT, CHARGE_DESCRIPTION,
+            CHARGE_DATE, DUE_DATE, STATUS, AUTO_PAYMENT_TRIGGERED, PAYMENT_ID,
+            CREATED_AT, UPDATED_AT
+        FROM MANAGEMENT_FEE_CHARGES
+        WHERE ID = #{id}
+    </select>
+
+    <!-- 호실별 관리비 청구 목록 조회 -->
+    <select id="selectManagementFeeChargesByUnitId" parameterType="Long" resultType="com.living.hana.dto.ManagementFeeChargeResponse">
+        SELECT
+            mfc.ID as id,
+            mfc.UNIT_ID as unitId,
+            u.UNIT_NUMBER as unitNumber,
+            b.NAME as buildingName,
+            mfc.CHARGE_AMOUNT as chargeAmount,
+            mfc.CHARGE_DESCRIPTION as chargeDescription,
+            mfc.CHARGE_DATE as chargeDate,
+            mfc.DUE_DATE as dueDate,
+            mfc.STATUS as status,
+            mfc.AUTO_PAYMENT_TRIGGERED as autoPaymentTriggered,
+            mfc.PAYMENT_ID as paymentId,
+            admin.NAME as chargedByUserName
+        FROM MANAGEMENT_FEE_CHARGES mfc
+        JOIN UNITS u ON mfc.UNIT_ID = u.ID
+        JOIN BUILDINGS b ON u.BUILDING_ID = b.ID
+        LEFT JOIN USERS admin ON mfc.CHARGED_BY_USER_ID = admin.ID
+        WHERE mfc.UNIT_ID = #{unitId}
+        ORDER BY mfc.CHARGE_DATE DESC
+    </select>
+
+    <!-- 사용자별 관리비 청구 목록 조회 (계약 정보 기반) -->
+    <select id="selectManagementFeeChargesByUserId" parameterType="Long" resultType="com.living.hana.dto.ManagementFeeChargeResponse">
+        SELECT
+            mfc.ID as id,
+            mfc.UNIT_ID as unitId,
+            u.UNIT_NUMBER as unitNumber,
+            b.NAME as buildingName,
+            mfc.CHARGE_AMOUNT as chargeAmount,
+            mfc.CHARGE_DESCRIPTION as chargeDescription,
+            mfc.CHARGE_DATE as chargeDate,
+            mfc.DUE_DATE as dueDate,
+            mfc.STATUS as status,
+            mfc.AUTO_PAYMENT_TRIGGERED as autoPaymentTriggered,
+            mfc.PAYMENT_ID as paymentId,
+            admin.NAME as chargedByUserName
+        FROM MANAGEMENT_FEE_CHARGES mfc
+        JOIN UNITS u ON mfc.UNIT_ID = u.ID
+        JOIN BUILDINGS b ON u.BUILDING_ID = b.ID
+        JOIN CONTRACTS c ON u.ID = c.UNIT_ID
+        LEFT JOIN USERS admin ON mfc.CHARGED_BY_USER_ID = admin.ID
+        WHERE c.USER_ID = #{userId} AND c.STATUS = 'ACTIVE'
+        ORDER BY mfc.CHARGE_DATE DESC
+    </select>
+
+    <!-- 관리자용 전체 관리비 청구 목록 조회 -->
+    <select id="selectAllManagementFeeCharges" resultType="com.living.hana.dto.ManagementFeeChargeResponse">
+        SELECT
+            mfc.ID as id,
+            mfc.UNIT_ID as unitId,
+            u.UNIT_NUMBER as unitNumber,
+            b.NAME as buildingName,
+            mfc.CHARGE_AMOUNT as chargeAmount,
+            mfc.CHARGE_DESCRIPTION as chargeDescription,
+            mfc.CHARGE_DATE as chargeDate,
+            mfc.DUE_DATE as dueDate,
+            mfc.STATUS as status,
+            mfc.AUTO_PAYMENT_TRIGGERED as autoPaymentTriggered,
+            mfc.PAYMENT_ID as paymentId,
+            admin.NAME as chargedByUserName
+        FROM MANAGEMENT_FEE_CHARGES mfc
+        JOIN UNITS u ON mfc.UNIT_ID = u.ID
+        JOIN BUILDINGS b ON u.BUILDING_ID = b.ID
+        LEFT JOIN USERS admin ON mfc.CHARGED_BY_USER_ID = admin.ID
+        ORDER BY mfc.CHARGE_DATE DESC
+    </select>
+
+    <!-- 관리비 청구 상태 업데이트 -->
+    <update id="updateManagementFeeChargeStatus">
+        UPDATE MANAGEMENT_FEE_CHARGES
+        SET STATUS = #{status}, UPDATED_AT = TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS')
+        WHERE ID = #{id}
+    </update>
+
+    <!-- 관리비 청구에 결제 정보 연결 -->
+    <update id="updateManagementFeeChargePaymentInfo">
+        UPDATE MANAGEMENT_FEE_CHARGES
+        SET PAYMENT_ID = #{paymentId},
+            AUTO_PAYMENT_TRIGGERED = #{autoPaymentTriggered},
+            UPDATED_AT = TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS')
+        WHERE ID = #{id}
+    </update>
+
+    <!-- 사용자별 관리비 결제 이력 조회 -->
+    <select id="selectManagementFeeTransactionsByUserId" parameterType="Long" resultType="com.living.hana.dto.ManagementFeeHistoryResponse$ManagementFeeTransaction">
+        SELECT
+            mfc.ID as chargeId,
+            u.UNIT_NUMBER as unitNumber,
+            b.NAME as buildingName,
+            mfc.CHARGE_AMOUNT as amount,
+            mfc.CHARGE_DATE as chargeDate,
+            p.PAID_DATE as paymentDate,
+            mfc.STATUS as status,
+            mfc.CHARGE_DESCRIPTION as description,
+            p.HANA_BANK_TRANSACTION_ID as hanaBankTransactionId
+        FROM MANAGEMENT_FEE_CHARGES mfc
+        JOIN UNITS u ON mfc.UNIT_ID = u.ID
+        JOIN BUILDINGS b ON u.BUILDING_ID = b.ID
+        JOIN CONTRACTS c ON u.ID = c.UNIT_ID
+        LEFT JOIN PAYMENTS p ON mfc.PAYMENT_ID = p.ID
+        WHERE c.USER_ID = #{userId} AND c.STATUS = 'ACTIVE'
+        ORDER BY mfc.CHARGE_DATE DESC
+    </select>
+
+    <!-- 사용자별 월세 결제 이력 조회 -->
+    <select id="selectRentTransactionsByUserId" parameterType="Long" resultType="com.living.hana.dto.ManagementFeeHistoryResponse$RentTransaction">
+        SELECT
+            p.ID as paymentId,
+            u.UNIT_NUMBER as unitNumber,
+            b.NAME as buildingName,
+            p.AMOUNT as amount,
+            p.PAID_DATE as paymentDate,
+            p.STATUS as status,
+            p.HANA_BANK_TRANSACTION_ID as hanaBankTransactionId
+        FROM PAYMENTS p
+        JOIN CONTRACTS c ON p.CONTRACT_ID = c.ID
+        JOIN UNITS u ON c.UNIT_ID = u.ID
+        JOIN BUILDINGS b ON u.BUILDING_ID = b.ID
+        WHERE c.USER_ID = #{userId}
+        AND p.PAYMENT_CATEGORY = 'RENT'
+        AND c.STATUS = 'ACTIVE'
+        ORDER BY p.PAID_DATE DESC
+    </select>
+
+    <!-- 미결제 관리비 청구 조회 (자동이체 대상) -->
+    <select id="selectPendingChargesForAutoPayment" resultType="com.living.hana.entity.ManagementFeeCharge">
+        SELECT
+            ID, UNIT_ID, CHARGED_BY_USER_ID, CHARGE_AMOUNT, CHARGE_DESCRIPTION,
+            CHARGE_DATE, DUE_DATE, STATUS, AUTO_PAYMENT_TRIGGERED, PAYMENT_ID,
+            CREATED_AT, UPDATED_AT
+        FROM MANAGEMENT_FEE_CHARGES
+        WHERE STATUS = 'PENDING'
+        AND AUTO_PAYMENT_TRIGGERED = 'N'
+        ORDER BY CHARGE_DATE ASC
+    </select>
+
+</mapper>

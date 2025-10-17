@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 
+    DEPRECATED: 이 매퍼는 더 이상 사용되지 않습니다.
+    투자 상품 데이터는 HanaSecuritiesApiClient를 통해 외부 API에서 가져옵니다.
+    
+    변경 사항:
+    - InvestmentProductService가 데이터베이스 대신 외부 API 사용
+    - INVESTMENT_PRODUCTS 테이블에 대한 의존성 제거
+    - 단일 데이터 소스로 HanaSecuritiesAPI 사용
+-->
+<mapper namespace="com.living.hana.investment.mapper.InvestmentProductMapper">
+    
+    <resultMap id="InvestmentProductResultMap" type="com.living.hana.entity.InvestmentProduct">
+        <id property="productId" column="PRODUCT_ID"/>
+        <result property="productName" column="PRODUCT_NAME"/>
+        <result property="productCode" column="PRODUCT_CODE"/>
+        <result property="productType" column="PRODUCT_TYPE"/>
+        <result property="issuer" column="ISSUER"/>
+        <result property="currentPrice" column="CURRENT_PRICE"/>
+        <result property="nav" column="NAV"/>
+        <result property="totalReturn" column="TOTAL_RETURN"/>
+        <result property="dividendYield" column="DIVIDEND_YIELD"/>
+        <result property="expenseRatio" column="EXPENSE_RATIO"/>
+        <result property="riskLevel" column="RISK_LEVEL"/>
+        <result property="riskGrade" column="RISK_GRADE"/>
+        <result property="description" column="DESCRIPTION"/>
+        <result property="minInvestmentAmount" column="MIN_INVESTMENT_AMOUNT"/>
+        <result property="investmentLimit" column="INVESTMENT_LIMIT"/>
+        <result property="listingDate" column="LISTING_DATE"/>
+        <result property="status" column="STATUS"/>
+        <result property="marketCap" column="MARKET_CAP"/>
+        <result property="tradingUnit" column="TRADING_UNIT"/>
+        <result property="settlementCycle" column="SETTLEMENT_CYCLE"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+    </resultMap>
+    
+    <select id="findAllProducts" resultMap="InvestmentProductResultMap">
+        SELECT * FROM INVESTMENT_PRODUCTS 
+        WHERE STATUS = 'ACTIVE'
+        ORDER BY CREATED_AT DESC
+    </select>
+    
+    <select id="findProductById" parameterType="String" resultMap="InvestmentProductResultMap">
+        SELECT * FROM INVESTMENT_PRODUCTS 
+        WHERE PRODUCT_ID = #{productId}
+    </select>
+    
+    <select id="findProductByCode" parameterType="String" resultMap="InvestmentProductResultMap">
+        SELECT * FROM INVESTMENT_PRODUCTS 
+        WHERE PRODUCT_CODE = #{productCode}
+    </select>
+    
+    <select id="findProductsByType" parameterType="String" resultMap="InvestmentProductResultMap">
+        SELECT * FROM INVESTMENT_PRODUCTS 
+        WHERE PRODUCT_TYPE = #{productType}
+        AND STATUS = 'ACTIVE'
+        ORDER BY CURRENT_PRICE DESC
+    </select>
+    
+    <select id="findProductsByIssuer" parameterType="String" resultMap="InvestmentProductResultMap">
+        SELECT * FROM INVESTMENT_PRODUCTS 
+        WHERE ISSUER = #{issuer}
+        AND STATUS = 'ACTIVE'
+        ORDER BY TOTAL_RETURN DESC
+    </select>
+    
+    <select id="findProductsByRiskLevel" parameterType="Integer" resultMap="InvestmentProductResultMap">
+        SELECT * FROM INVESTMENT_PRODUCTS 
+        WHERE RISK_LEVEL = #{riskLevel}
+        AND STATUS = 'ACTIVE'
+        ORDER BY DIVIDEND_YIELD DESC
+    </select>
+    
+    <select id="searchProducts" resultMap="InvestmentProductResultMap">
+        SELECT * FROM INVESTMENT_PRODUCTS 
+        WHERE STATUS = 'ACTIVE'
+        <if test="keyword != null and keyword != ''">
+            AND (PRODUCT_NAME LIKE '%' || #{keyword} || '%' 
+                 OR PRODUCT_CODE LIKE '%' || #{keyword} || '%'
+                 OR DESCRIPTION LIKE '%' || #{keyword} || '%')
+        </if>
+        <if test="productType != null and productType != ''">
+            AND PRODUCT_TYPE = #{productType}
+        </if>
+        <if test="riskLevel != null">
+            AND RISK_LEVEL = #{riskLevel}
+        </if>
+        <if test="minPrice != null">
+            AND CURRENT_PRICE &gt;= #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            AND CURRENT_PRICE &lt;= #{maxPrice}
+        </if>
+        ORDER BY TOTAL_RETURN DESC, CURRENT_PRICE ASC
+    </select>
+    
+    <insert id="insertProduct" parameterType="com.living.hana.entity.InvestmentProduct">
+        INSERT INTO INVESTMENT_PRODUCTS (
+            PRODUCT_ID, PRODUCT_NAME, PRODUCT_CODE, PRODUCT_TYPE, ISSUER,
+            CURRENT_PRICE, NAV, TOTAL_RETURN, DIVIDEND_YIELD, EXPENSE_RATIO,
+            RISK_LEVEL, RISK_GRADE, DESCRIPTION, MIN_INVESTMENT_AMOUNT, INVESTMENT_LIMIT,
+            LISTING_DATE, STATUS, MARKET_CAP, TRADING_UNIT, SETTLEMENT_CYCLE
+        ) VALUES (
+            #{productId}, #{productName}, #{productCode}, #{productType}, #{issuer},
+            #{currentPrice}, #{nav}, #{totalReturn}, #{dividendYield}, #{expenseRatio},
+            #{riskLevel}, #{riskGrade}, #{description}, #{minInvestmentAmount}, #{investmentLimit},
+            #{listingDate}, #{status}, #{marketCap}, #{tradingUnit}, #{settlementCycle}
+        )
+    </insert>
+    
+    <update id="updateProduct" parameterType="com.living.hana.entity.InvestmentProduct">
+        UPDATE INVESTMENT_PRODUCTS 
+        SET PRODUCT_NAME = #{productName},
+            PRODUCT_CODE = #{productCode},
+            PRODUCT_TYPE = #{productType},
+            ISSUER = #{issuer},
+            CURRENT_PRICE = #{currentPrice},
+            NAV = #{nav},
+            TOTAL_RETURN = #{totalReturn},
+            DIVIDEND_YIELD = #{dividendYield},
+            EXPENSE_RATIO = #{expenseRatio},
+            RISK_LEVEL = #{riskLevel},
+            RISK_GRADE = #{riskGrade},
+            DESCRIPTION = #{description},
+            MIN_INVESTMENT_AMOUNT = #{minInvestmentAmount},
+            INVESTMENT_LIMIT = #{investmentLimit},
+            LISTING_DATE = #{listingDate},
+            STATUS = #{status},
+            MARKET_CAP = #{marketCap},
+            TRADING_UNIT = #{tradingUnit},
+            SETTLEMENT_CYCLE = #{settlementCycle},
+            UPDATED_AT = CURRENT_TIMESTAMP
+        WHERE PRODUCT_ID = #{productId}
+    </update>
+    
+    <update id="updateProductPriceAndNav">
+        UPDATE INVESTMENT_PRODUCTS 
+        SET CURRENT_PRICE = #{currentPrice},
+            NAV = #{nav},
+            UPDATED_AT = CURRENT_TIMESTAMP
+        WHERE PRODUCT_ID = #{productId}
+    </update>
+    
+    <delete id="deleteProduct" parameterType="String">
+        UPDATE INVESTMENT_PRODUCTS 
+        SET STATUS = 'INACTIVE',
+            UPDATED_AT = CURRENT_TIMESTAMP
+        WHERE PRODUCT_ID = #{productId}
+    </delete>
+    
+</mapper>

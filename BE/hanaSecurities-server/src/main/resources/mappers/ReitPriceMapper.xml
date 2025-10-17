@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hana.securities.mapper.ReitPriceMapper">
+
+    <!-- 결과 매핑 -->
+    <resultMap id="DailyPriceResultMap" type="com.hana.securities.entity.DailyPrice">
+        <result property="productCode" column="PRODUCT_CODE"/>
+        <result property="tradeDate" column="TRADE_DATE"/>
+        <result property="closingPrice" column="CLOSING_PRICE"/>
+        <result property="highPrice" column="HIGH_PRICE"/>
+        <result property="lowPrice" column="LOW_PRICE"/>
+    </resultMap>
+
+    <!-- 특정 리츠의 일별 가격 조회 (기간 필터) -->
+    <select id="selectDailyPrices" resultMap="DailyPriceResultMap">
+        SELECT
+            PRODUCT_CODE,
+            TO_CHAR(TRADE_DATE, 'YYYY-MM-DD') AS TRADE_DATE,
+            CLOSING_PRICE,
+            HIGH_PRICE,
+            LOW_PRICE
+        FROM REIT_DAILY_PRICES
+        WHERE PRODUCT_CODE = #{productCode}
+          AND TRADE_DATE BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD')
+                             AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+        ORDER BY TRADE_DATE ASC
+    </select>
+
+    <!-- 특정일의 종가 조회 -->
+    <select id="selectPriceByDate" resultMap="DailyPriceResultMap">
+        SELECT
+            PRODUCT_CODE,
+            TO_CHAR(TRADE_DATE, 'YYYY-MM-DD') AS TRADE_DATE,
+            CLOSING_PRICE,
+            HIGH_PRICE,
+            LOW_PRICE
+        FROM REIT_DAILY_PRICES
+        WHERE PRODUCT_CODE = #{productCode}
+          AND TRADE_DATE = TO_DATE(#{tradeDate}, 'YYYY-MM-DD')
+    </select>
+
+    <!-- 특정일 이후 가장 가까운 거래일의 가격 조회 -->
+    <select id="selectNextAvailablePrice" resultMap="DailyPriceResultMap">
+        SELECT
+            PRODUCT_CODE,
+            TO_CHAR(TRADE_DATE, 'YYYY-MM-DD') AS TRADE_DATE,
+            CLOSING_PRICE,
+            HIGH_PRICE,
+            LOW_PRICE
+        FROM REIT_DAILY_PRICES
+        WHERE PRODUCT_CODE = #{productCode}
+          AND TRADE_DATE >= TO_DATE(#{tradeDate}, 'YYYY-MM-DD')
+        ORDER BY TRADE_DATE ASC
+        FETCH FIRST 1 ROW ONLY
+    </select>
+
+    <!-- 모든 리츠 상품 코드 조회 (가격 데이터가 있는 상품만) -->
+    <select id="selectAllProductCodes" resultType="String">
+        SELECT DISTINCT PRODUCT_CODE
+        FROM REIT_DAILY_PRICES
+        ORDER BY PRODUCT_CODE
+    </select>
+
+    <!-- 특정 상품의 최신 가격 조회 -->
+    <select id="selectLatestPrice" resultMap="DailyPriceResultMap">
+        SELECT
+            PRODUCT_CODE,
+            TO_CHAR(TRADE_DATE, 'YYYY-MM-DD') AS TRADE_DATE,
+            CLOSING_PRICE,
+            HIGH_PRICE,
+            LOW_PRICE
+        FROM REIT_DAILY_PRICES
+        WHERE PRODUCT_CODE = #{productCode}
+        ORDER BY TRADE_DATE DESC
+        FETCH FIRST 1 ROW ONLY
+    </select>
+
+    <!-- 일별 가격 데이터 UPSERT (Oracle MERGE 사용) -->
+    <!-- TODO: 임시 기능 - 개발 완료 후 삭제 예정 -->
+    <insert id="upsertDailyPrice">
+        MERGE INTO REIT_DAILY_PRICES target
+        USING (
+            SELECT
+                #{dailyPrice.productCode} AS PRODUCT_CODE,
+                TO_DATE(#{dailyPrice.tradeDate}, 'YYYY-MM-DD') AS TRADE_DATE,
+                #{dailyPrice.closingPrice} AS CLOSING_PRICE,
+                #{dailyPrice.highPrice} AS HIGH_PRICE,
+                #{dailyPrice.lowPrice} AS LOW_PRICE,
+                #{dailyPrice.volume, jdbcType=BIGINT} AS VOLUME
+            FROM DUAL
+        ) source
+        ON (target.PRODUCT_CODE = source.PRODUCT_CODE AND target.TRADE_DATE = source.TRADE_DATE)
+        WHEN MATCHED THEN
+            UPDATE SET
+                target.CLOSING_PRICE = source.CLOSING_PRICE,
+                target.HIGH_PRICE = source.HIGH_PRICE,
+                target.LOW_PRICE = source.LOW_PRICE,
+                target.VOLUME = source.VOLUME
+        WHEN NOT MATCHED THEN
+            INSERT (PRODUCT_CODE, TRADE_DATE, CLOSING_PRICE, HIGH_PRICE, LOW_PRICE, VOLUME, CREATED_AT)
+            VALUES (source.PRODUCT_CODE, source.TRADE_DATE, source.CLOSING_PRICE, source.HIGH_PRICE, source.LOW_PRICE, source.VOLUME, SYSTIMESTAMP)
+    </insert>
+
+</mapper>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hana.securities.mapper.ReitDividendMapper">
+
+    <!-- 결과 매핑 -->
+    <resultMap id="DividendResultMap" type="com.hana.securities.entity.Dividend">
+        <id property="dividendId" column="DIVIDEND_ID"/>
+        <result property="productCode" column="PRODUCT_CODE"/>
+        <result property="exDividendDate" column="EX_DIVIDEND_DATE"/>
+        <result property="dividendPerShare" column="DIVIDEND_PER_SHARE"/>
+        <result property="paymentDate" column="PAYMENT_DATE"/>
+        <result property="dividendYear" column="DIVIDEND_YEAR"/>
+        <result property="dividendQuarter" column="DIVIDEND_QUARTER"/>
+    </resultMap>
+
+    <!-- 특정 리츠의 배당 이력 조회 (기간 필터) -->
+    <select id="selectDividends" resultMap="DividendResultMap">
+        SELECT
+            DIVIDEND_ID,
+            PRODUCT_CODE,
+            TO_CHAR(EX_DIVIDEND_DATE, 'YYYY-MM-DD') AS EX_DIVIDEND_DATE,
+            DIVIDEND_PER_SHARE,
+            TO_CHAR(PAYMENT_DATE, 'YYYY-MM-DD') AS PAYMENT_DATE,
+            DIVIDEND_YEAR,
+            DIVIDEND_QUARTER
+        FROM REIT_DIVIDENDS
+        WHERE PRODUCT_CODE = #{productCode}
+          AND EX_DIVIDEND_DATE BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD')
+                                   AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+        ORDER BY EX_DIVIDEND_DATE ASC
+    </select>
+
+    <!-- 특정 리츠의 모든 배당 이력 조회 -->
+    <select id="selectAllDividendsByProduct" resultMap="DividendResultMap">
+        SELECT
+            DIVIDEND_ID,
+            PRODUCT_CODE,
+            TO_CHAR(EX_DIVIDEND_DATE, 'YYYY-MM-DD') AS EX_DIVIDEND_DATE,
+            DIVIDEND_PER_SHARE,
+            TO_CHAR(PAYMENT_DATE, 'YYYY-MM-DD') AS PAYMENT_DATE,
+            DIVIDEND_YEAR,
+            DIVIDEND_QUARTER
+        FROM REIT_DIVIDENDS
+        WHERE PRODUCT_CODE = #{productCode}
+        ORDER BY EX_DIVIDEND_DATE ASC
+    </select>
+
+    <!-- 특정 배당락일의 배당 정보 조회 -->
+    <select id="selectDividendByDate" resultMap="DividendResultMap">
+        SELECT
+            DIVIDEND_ID,
+            PRODUCT_CODE,
+            TO_CHAR(EX_DIVIDEND_DATE, 'YYYY-MM-DD') AS EX_DIVIDEND_DATE,
+            DIVIDEND_PER_SHARE,
+            TO_CHAR(PAYMENT_DATE, 'YYYY-MM-DD') AS PAYMENT_DATE,
+            DIVIDEND_YEAR,
+            DIVIDEND_QUARTER
+        FROM REIT_DIVIDENDS
+        WHERE PRODUCT_CODE = #{productCode}
+          AND EX_DIVIDEND_DATE = TO_DATE(#{exDividendDate}, 'YYYY-MM-DD')
+    </select>
+
+    <!-- 배당 데이터 UPSERT (Oracle MERGE 사용) -->
+    <!-- TODO: 임시 기능 - 개발 완료 후 삭제 예정 -->
+    <insert id="upsertDividend">
+        MERGE INTO REIT_DIVIDENDS target
+        USING (
+            SELECT
+                #{dividend.productCode} AS PRODUCT_CODE,
+                TO_DATE(#{dividend.exDividendDate}, 'YYYY-MM-DD') AS EX_DIVIDEND_DATE,
+                #{dividend.dividendPerShare} AS DIVIDEND_PER_SHARE,
+                <choose>
+                    <when test="dividend.paymentDate != null and dividend.paymentDate != ''">
+                        TO_DATE(#{dividend.paymentDate}, 'YYYY-MM-DD') AS PAYMENT_DATE,
+                    </when>
+                    <otherwise>
+                        NULL AS PAYMENT_DATE,
+                    </otherwise>
+                </choose>
+                #{dividend.dividendYear} AS DIVIDEND_YEAR,
+                #{dividend.dividendQuarter} AS DIVIDEND_QUARTER
+            FROM DUAL
+        ) source
+        ON (target.PRODUCT_CODE = source.PRODUCT_CODE AND target.EX_DIVIDEND_DATE = source.EX_DIVIDEND_DATE)
+        WHEN MATCHED THEN
+            UPDATE SET
+                target.DIVIDEND_PER_SHARE = source.DIVIDEND_PER_SHARE,
+                target.PAYMENT_DATE = source.PAYMENT_DATE,
+                target.DIVIDEND_YEAR = source.DIVIDEND_YEAR,
+                target.DIVIDEND_QUARTER = source.DIVIDEND_QUARTER
+        WHEN NOT MATCHED THEN
+            INSERT (DIVIDEND_ID, PRODUCT_CODE, EX_DIVIDEND_DATE, DIVIDEND_PER_SHARE, PAYMENT_DATE, DIVIDEND_YEAR, DIVIDEND_QUARTER, CREATED_AT)
+            VALUES (SEQ_REIT_DIVIDEND.NEXTVAL, source.PRODUCT_CODE, source.EX_DIVIDEND_DATE, source.DIVIDEND_PER_SHARE, source.PAYMENT_DATE, source.DIVIDEND_YEAR, source.DIVIDEND_QUARTER, SYSTIMESTAMP)
+    </insert>
+
+</mapper>

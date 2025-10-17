@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.living.hana.mapper.ContractMapper">
+
+    <resultMap id="ContractResultMap" type="com.living.hana.entity.Contract">
+        <id column="ID" property="id"/>
+        <result column="USER_ID" property="userId"/>
+        <result column="UNIT_ID" property="unitId"/>
+        <result column="CONTRACT_NUMBER" property="contractNumber"/>
+        <result column="START_DATE" property="startDate"/>
+        <result column="END_DATE" property="endDate"/>
+        <result column="DEPOSIT" property="deposit"/>
+        <result column="MONTHLY_RENT" property="monthlyRent"/>
+        <result column="STATUS" property="status"/>
+        <result column="MOVE_IN_DATE" property="moveInDate"/>
+        <result column="PAYMENT_DAY" property="paymentDay"/>
+        <result column="CONTRACT_IMAGE_URL" property="contractImageUrl"/>
+        <result column="CREATED_AT" property="createdAt"/>
+        <result column="UPDATED_AT" property="updatedAt"/>
+    </resultMap>
+
+    <!-- 계약 상세 정보 조회를 위한 ResultMap -->
+    <resultMap id="ContractDetailResultMap" type="com.living.hana.dto.ContractDetailResponse">
+        <!-- 계약 기본 정보 -->
+        <id column="ID" property="id"/>
+        <result column="CONTRACT_NUMBER" property="contractNumber"/>
+        <result column="START_DATE" property="startDate"/>
+        <result column="END_DATE" property="endDate"/>
+        <result column="DEPOSIT" property="deposit"/>
+        <result column="MONTHLY_RENT" property="monthlyRent"/>
+        <result column="STATUS" property="status"/>
+        <result column="MOVE_IN_DATE" property="moveInDate"/>
+        <result column="PAYMENT_DAY" property="paymentDay"/>
+        <result column="CONTRACT_IMAGE_URL" property="contractImageUrl"/>
+        <result column="CREATED_AT" property="createdAt"/>
+        <result column="UPDATED_AT" property="updatedAt"/>
+
+        <!-- 사용자 정보 -->
+        <result column="USER_ID" property="userId"/>
+        <result column="USER_NAME" property="userName"/>
+        <result column="USER_EMAIL" property="userEmail"/>
+        <result column="USER_PHONE" property="userPhone"/>
+        
+        <!-- 호실 정보 -->
+        <result column="UNIT_ID" property="unitId"/>
+        <result column="UNIT_NUMBER" property="unitNumber"/>
+        <result column="FLOOR" property="floor"/>
+        <result column="UNIT_TYPE" property="unitType"/>
+        <result column="AREA" property="unitArea"/>
+        <result column="UNIT_MONTHLY_RENT" property="unitMonthlyRent"/>
+        <result column="UNIT_DEPOSIT" property="unitDeposit"/>
+        <result column="UNIT_STATUS" property="unitStatus"/>
+        <result column="UNIT_IMAGES" property="unitImages"/>
+        
+        <!-- 건물 정보 -->
+        <result column="BUILDING_ID" property="buildingId"/>
+        <result column="BUILDING_NAME" property="buildingName"/>
+        <result column="BUILDING_ADDRESS" property="buildingAddress"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="ContractResultMap">
+        SELECT * FROM CONTRACTS ORDER BY ID
+    </select>
+
+    <select id="findById" resultMap="ContractResultMap">
+        SELECT * FROM CONTRACTS WHERE ID = #{id}
+    </select>
+
+    <select id="findByUserId" resultMap="ContractResultMap">
+        SELECT * FROM CONTRACTS WHERE USER_ID = #{userId} ORDER BY START_DATE DESC
+    </select>
+
+    <select id="findByUnitId" resultMap="ContractResultMap">
+        SELECT * FROM CONTRACTS WHERE UNIT_ID = #{unitId} ORDER BY START_DATE DESC
+    </select>
+
+    <!-- 호실별 활성 계약 조회 (관리비 청구용) -->
+    <select id="findActiveContractByUnitId" resultMap="ContractResultMap">
+        SELECT * FROM CONTRACTS
+        WHERE UNIT_ID = #{unitId}
+        AND STATUS = 'ACTIVE'
+        ORDER BY START_DATE DESC
+        FETCH FIRST 1 ROW ONLY
+    </select>
+
+    <select id="findByStatus" resultMap="ContractResultMap">
+        SELECT * FROM CONTRACTS WHERE STATUS = #{status} ORDER BY ID
+    </select>
+
+    <select id="findByUserIdAndStatus" resultMap="ContractResultMap">
+        SELECT * FROM CONTRACTS
+        WHERE USER_ID = #{userId} AND STATUS = #{status}
+        ORDER BY START_DATE DESC
+    </select>
+
+    <!-- 계약 상세 정보 조회 (ID로) -->
+    <select id="findContractDetailById" resultMap="ContractDetailResultMap">
+        SELECT
+            c.*,
+            u.NAME as USER_NAME,
+            u.EMAIL as USER_EMAIL,
+            u.PHONE as USER_PHONE,
+            un.UNIT_NUMBER,
+            un.FLOOR,
+            un.UNIT_TYPE,
+            un.AREA,
+            un.MONTHLY_RENT as UNIT_MONTHLY_RENT,
+            un.DEPOSIT as UNIT_DEPOSIT,
+            un.STATUS as UNIT_STATUS,
+            un.IMAGES as UNIT_IMAGES,
+            b.ID as BUILDING_ID,
+            b.NAME as BUILDING_NAME,
+            b.ADDRESS as BUILDING_ADDRESS
+        FROM CONTRACTS c
+        LEFT JOIN USERS u ON c.USER_ID = u.ID
+        LEFT JOIN UNITS un ON c.UNIT_ID = un.ID
+        LEFT JOIN BUILDINGS b ON un.BUILDING_ID = b.ID
+        WHERE c.ID = #{id}
+    </select>
+
+    <!-- 사용자별 계약 상세 정보 조회 -->
+    <select id="findContractDetailsByUserId" resultMap="ContractDetailResultMap">
+        SELECT
+            c.*,
+            u.NAME as USER_NAME,
+            u.EMAIL as USER_EMAIL,
+            u.PHONE as USER_PHONE,
+            un.UNIT_NUMBER,
+            un.FLOOR,
+            un.UNIT_TYPE,
+            un.AREA,
+            un.MONTHLY_RENT as UNIT_MONTHLY_RENT,
+            un.DEPOSIT as UNIT_DEPOSIT,
+            un.STATUS as UNIT_STATUS,
+            un.IMAGES as UNIT_IMAGES,
+            b.ID as BUILDING_ID,
+            b.NAME as BUILDING_NAME,
+            b.ADDRESS as BUILDING_ADDRESS
+        FROM CONTRACTS c
+        LEFT JOIN USERS u ON c.USER_ID = u.ID
+        LEFT JOIN UNITS un ON c.UNIT_ID = un.ID
+        LEFT JOIN BUILDINGS b ON un.BUILDING_ID = b.ID
+        WHERE c.USER_ID = #{userId}
+        ORDER BY c.START_DATE DESC
+    </select>
+
+    <!-- 호실별 계약 상세 정보 조회 -->
+    <select id="findContractDetailsByUnitId" resultMap="ContractDetailResultMap">
+        SELECT
+            c.*,
+            u.NAME as USER_NAME,
+            u.EMAIL as USER_EMAIL,
+            u.PHONE as USER_PHONE,
+            un.UNIT_NUMBER,
+            un.FLOOR,
+            un.UNIT_TYPE,
+            un.AREA,
+            un.MONTHLY_RENT as UNIT_MONTHLY_RENT,
+            un.DEPOSIT as UNIT_DEPOSIT,
+            un.STATUS as UNIT_STATUS,
+            un.IMAGES as UNIT_IMAGES,
+            b.ID as BUILDING_ID,
+            b.NAME as BUILDING_NAME,
+            b.ADDRESS as BUILDING_ADDRESS
+        FROM CONTRACTS c
+        LEFT JOIN USERS u ON c.USER_ID = u.ID
+        LEFT JOIN UNITS un ON c.UNIT_ID = un.ID
+        LEFT JOIN BUILDINGS b ON un.BUILDING_ID = b.ID
+        WHERE c.UNIT_ID = #{unitId}
+        ORDER BY c.START_DATE DESC
+    </select>
+
+    <!-- 상태별 계약 상세 정보 조회 -->
+    <select id="findContractDetailsByStatus" resultMap="ContractDetailResultMap">
+        SELECT
+            c.*,
+            u.NAME as USER_NAME,
+            u.EMAIL as USER_EMAIL,
+            u.PHONE as USER_PHONE,
+            un.UNIT_NUMBER,
+            un.FLOOR,
+            un.UNIT_TYPE,
+            un.AREA,
+            un.MONTHLY_RENT as UNIT_MONTHLY_RENT,
+            un.DEPOSIT as UNIT_DEPOSIT,
+            un.STATUS as UNIT_STATUS,
+            un.IMAGES as UNIT_IMAGES,
+            b.ID as BUILDING_ID,
+            b.NAME as BUILDING_NAME,
+            b.ADDRESS as BUILDING_ADDRESS
+        FROM CONTRACTS c
+        LEFT JOIN USERS u ON c.USER_ID = u.ID
+        LEFT JOIN UNITS un ON c.UNIT_ID = un.ID
+        LEFT JOIN BUILDINGS b ON un.BUILDING_ID = b.ID
+        WHERE c.STATUS = #{status}
+        ORDER BY c.ID
+    </select>
+
+    <insert id="insert" parameterType="com.living.hana.entity.Contract">
+        INSERT INTO CONTRACTS (USER_ID, UNIT_ID, CONTRACT_NUMBER, START_DATE, END_DATE, DEPOSIT, MONTHLY_RENT, STATUS, MOVE_IN_DATE, PAYMENT_DAY, CONTRACT_IMAGE_URL, CREATED_AT, UPDATED_AT)
+        VALUES (#{userId}, #{unitId}, #{contractNumber}, #{startDate}, #{endDate}, #{deposit}, #{monthlyRent}, #{status}, #{moveInDate}, #{paymentDay}, #{contractImageUrl}, SYSDATE, SYSDATE)
+    </insert>
+
+    <update id="update" parameterType="com.living.hana.entity.Contract">
+        UPDATE CONTRACTS SET
+            USER_ID = #{userId},
+            UNIT_ID = #{unitId},
+            CONTRACT_NUMBER = #{contractNumber},
+            START_DATE = #{startDate},
+            END_DATE = #{endDate},
+            DEPOSIT = #{deposit},
+            MONTHLY_RENT = #{monthlyRent},
+            STATUS = #{status},
+            MOVE_IN_DATE = #{moveInDate},
+            PAYMENT_DAY = #{paymentDay},
+            CONTRACT_IMAGE_URL = #{contractImageUrl},
+            UPDATED_AT = SYSDATE
+        WHERE ID = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM CONTRACTS WHERE ID = #{id}
+    </delete>
+
+    <!-- 월세 자동이체용 - 활성 계약 조회 (매월 결제일 확인용) -->
+    <select id="findActiveContractsForRentPayment" resultMap="ContractResultMap">
+        SELECT * FROM CONTRACTS
+        WHERE STATUS = 'ACTIVE'
+        AND MONTHLY_RENT > 0
+        AND PAYMENT_DAY IS NOT NULL
+        ORDER BY PAYMENT_DAY, ID
+    </select>
+
+    <!-- 특정 결제일에 해당하는 계약 조회 -->
+    <select id="findContractsByPaymentDate" resultMap="ContractResultMap">
+        SELECT * FROM CONTRACTS
+        WHERE STATUS = 'ACTIVE'
+        AND MONTHLY_RENT > 0
+        AND PAYMENT_DAY = #{paymentDay}
+        ORDER BY ID
+    </select>
+
+    <!-- 계약의 월세 정보 조회 -->
+    <select id="findContractWithRentInfo" resultMap="ContractResultMap">
+        SELECT
+            c.*,
+            u.NAME as USER_NAME,
+            u.EMAIL as USER_EMAIL,
+            u.PHONE as USER_PHONE,
+            un.UNIT_NUMBER,
+            un.FLOOR,
+            b.NAME as BUILDING_NAME
+        FROM CONTRACTS c
+        LEFT JOIN USERS u ON c.USER_ID = u.ID
+        LEFT JOIN UNITS un ON c.UNIT_ID = un.ID
+        LEFT JOIN BUILDINGS b ON un.BUILDING_ID = b.ID
+        WHERE c.ID = #{contractId}
+        AND c.STATUS = 'ACTIVE'
+    </select>
+
+</mapper>

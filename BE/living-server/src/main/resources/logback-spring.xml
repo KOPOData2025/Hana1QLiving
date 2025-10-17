@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProfile name="!prod">
+        <property name="LOG_LEVEL" value="INFO"/>
+    </springProfile>
+    <springProfile name="prod">
+        <property name="LOG_LEVEL" value="WARN"/>
+    </springProfile>
+
+    <!-- =================================================================== -->
+    <!-- 콘솔 JSON 로그 출력 (모니터링용) -->
+    <!-- =================================================================== -->
+    <appender name="JSON_APPENDER" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeContext>true</includeContext>
+            <includeMdc>true</includeMdc>
+            <customFields>{"service":"hana-oneqliving","version":"1.0.0","environment":"${spring.profiles.active:-dev}"}</customFields>
+            <fieldNames>
+                <timestamp>@timestamp</timestamp>
+                <message>message</message>
+                <level>level</level>
+                <logger>logger</logger>
+                <thread>thread</thread>
+            </fieldNames>
+        </encoder>
+    </appender>
+
+    <!-- =================================================================== -->
+    <!-- OpenTelemetry는 Spring Boot Starter가 자동으로 추가 -->
+    <!-- =================================================================== -->
+
+    <!-- =================================================================== -->
+    <!-- 로그 레벨 설정: 실무용 최소화 -->
+    <!-- =================================================================== -->
+
+    <!-- 애플리케이션 비즈니스 로직만 INFO 레벨 -->
+    <logger name="com.living.hana" level="INFO" additivity="false">
+        <appender-ref ref="JSON_APPENDER"/>
+    </logger>
+
+    <!-- 중요한 외부 연동만 INFO -->
+    <logger name="HanaSecuritiesWebSocketClient" level="INFO" additivity="false">
+        <appender-ref ref="JSON_APPENDER"/>
+    </logger>
+
+    <!-- 보안 관련 중요 로그만 -->
+    <logger name="org.springframework.security" level="WARN" additivity="false">
+        <appender-ref ref="JSON_APPENDER"/>
+    </logger>
+
+    <!-- =================================================================== -->
+    <!-- 불필요한 로그 완전 차단 -->
+    <!-- =================================================================== -->
+    <logger name="org.springframework.web" level="ERROR"/>
+    <logger name="org.springframework.boot" level="ERROR"/>
+    <logger name="org.springframework.context" level="ERROR"/>
+    <logger name="org.springframework.beans" level="ERROR"/>
+    <logger name="org.mybatis" level="ERROR"/>
+    <logger name="org.apache.catalina" level="ERROR"/>
+    <logger name="org.apache.coyote" level="ERROR"/>
+    <logger name="org.hibernate.validator" level="ERROR"/>
+    <logger name="org.apache.tomcat" level="ERROR"/>
+    <logger name="io.opentelemetry" level="ERROR"/>
+    <logger name="io.micrometer" level="ERROR"/>
+    <logger name="com.zaxxer.hikari" level="ERROR"/>
+    <logger name="oracle.jdbc" level="ERROR"/>
+    <logger name="org.springframework.jdbc" level="ERROR"/>
+
+    <!-- Root 로거: WARN 이상만 -->
+    <root level="WARN">
+        <appender-ref ref="JSON_APPENDER"/>
+    </root>
+</configuration>

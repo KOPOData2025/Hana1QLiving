@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hana.securities.mapper.ReitSimulationMapper">
+
+    <!-- REIT Ranking 결과 매핑 -->
+    <resultMap id="RankingResultMap" type="com.hana.securities.entity.ReitRanking">
+        <result property="rank" column="RANK"/>
+        <result property="productCode" column="PRODUCT_CODE"/>
+        <result property="productName" column="PRODUCT_NAME"/>
+        <result property="productType" column="PRODUCT_TYPE"/>
+        <result property="totalInvestment" column="TOTAL_INVESTMENT"/>
+        <result property="finalValue" column="FINAL_VALUE"/>
+        <result property="profit" column="PROFIT"/>
+        <result property="returnRate" column="RETURN_RATE"/>
+        <result property="annualizedReturn" column="ANNUALIZED_RETURN"/>
+
+        <!-- Summary 중첩 객체 -->
+        <association property="summary" javaType="com.hana.securities.entity.ReitRanking$Summary">
+            <!-- Summary 기본 정보 (result 태그들을 association보다 먼저) -->
+            <result property="totalShares" column="TOTAL_SHARES"/>
+            <result property="currentPrice" column="CURRENT_PRICE"/>
+            <result property="averagePurchasePrice" column="AVERAGE_PURCHASE_PRICE"/>
+
+            <!-- 초기 매수 정보 -->
+            <association property="initialPurchase" javaType="com.hana.securities.entity.ReitRanking$PurchaseInfo">
+                <result property="amount" column="INITIAL_AMOUNT"/>
+                <result property="shares" column="INITIAL_SHARES"/>
+                <result property="avgPrice" column="INITIAL_AVG_PRICE"/>
+                <result property="count" column="INITIAL_COUNT"/>
+            </association>
+
+            <!-- 정기 매수 정보 -->
+            <association property="recurringPurchase" javaType="com.hana.securities.entity.ReitRanking$PurchaseInfo">
+                <result property="amount" column="RECURRING_AMOUNT"/>
+                <result property="shares" column="RECURRING_SHARES"/>
+                <result property="avgPrice" column="RECURRING_AVG_PRICE"/>
+                <result property="count" column="RECURRING_COUNT"/>
+            </association>
+
+            <!-- 배당 재투자 정보 -->
+            <association property="dividendReinvestment" javaType="com.hana.securities.entity.ReitRanking$PurchaseInfo">
+                <result property="amount" column="DIVIDEND_REINVEST_AMOUNT"/>
+                <result property="shares" column="DIVIDEND_REINVEST_SHARES"/>
+                <result property="avgPrice" column="DIVIDEND_REINVEST_AVG_PRICE"/>
+                <result property="count" column="DIVIDEND_REINVEST_COUNT"/>
+            </association>
+
+            <!-- 배당 정보 -->
+            <association property="dividends" javaType="com.hana.securities.entity.ReitRanking$DividendInfo">
+                <result property="totalAmount" column="DIVIDEND_TOTAL_AMOUNT"/>
+                <result property="count" column="DIVIDEND_COUNT"/>
+                <result property="avgYield" column="DIVIDEND_AVG_YIELD"/>
+            </association>
+        </association>
+    </resultMap>
+
+    <!-- PL/SQL 프로시저 호출 -->
+    <select id="runSimulationProcedure" statementType="CALLABLE"
+            parameterType="com.hana.securities.entity.SimulationProcedureRequest"
+            timeout="600">
+        {CALL PKG_REIT_SIMULATION.RUN_SIMULATION(
+            #{startDate, mode=IN, jdbcType=VARCHAR},
+            #{endDate, mode=IN, jdbcType=VARCHAR},
+            #{initialInvestment, mode=IN, jdbcType=NUMERIC},
+            #{recurringAmount, mode=IN, jdbcType=NUMERIC},
+            #{recurringFrequency, mode=IN, jdbcType=VARCHAR},
+            #{dividendReinvestment, mode=IN, jdbcType=VARCHAR},
+            #{rankings, mode=OUT, jdbcType=CURSOR, resultMap=RankingResultMap},
+            #{priceQueryCount, mode=OUT, jdbcType=NUMERIC}
+        )}
+    </select>
+
+</mapper>

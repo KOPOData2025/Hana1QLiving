@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.living.hana.mapper.ReitBuildingMappingMapper">
+
+    <!-- REIT 건물 매핑 결과 매핑 -->
+    <resultMap id="ReitBuildingMappingResultMap" type="com.living.hana.entity.ReitBuildingMapping">
+        <id property="mappingId" column="mapping_id"/>
+        <result property="productCode" column="product_code"/>
+        <result property="buildingId" column="building_id"/>
+        <result property="inclusionDate" column="inclusion_date"/>
+        <result property="exclusionDate" column="exclusion_date"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <!-- 건물 정보를 포함한 매핑 결과 매핑 -->
+    <resultMap id="ReitBuildingMappingWithBuildingResultMap" type="com.living.hana.entity.ReitBuildingMapping">
+        <id property="mappingId" column="mapping_id"/>
+        <result property="productCode" column="product_code"/>
+        <result property="buildingId" column="building_id"/>
+        <result property="inclusionDate" column="inclusion_date"/>
+        <result property="exclusionDate" column="exclusion_date"/>
+        <result property="createdAt" column="created_at"/>
+        <!-- 건물 정보는 별도 DTO에서 처리 -->
+    </resultMap>
+
+    <!-- REIT 상품에 포함된 건물 조회 -->
+    <select id="findByProductCode" parameterType="string" resultMap="ReitBuildingMappingResultMap">
+        SELECT mapping_id, product_code, building_id, inclusion_date,
+               exclusion_date, created_at
+        FROM reit_building_mappings
+        WHERE product_code = #{productCode}
+        ORDER BY inclusion_date DESC
+    </select>
+
+    <!-- 현재 포함된 건물만 조회 -->
+    <select id="findActiveByProductCode" parameterType="string" resultMap="ReitBuildingMappingResultMap">
+        SELECT mapping_id, product_code, building_id, inclusion_date,
+               exclusion_date, created_at
+        FROM reit_building_mappings
+        WHERE product_code = #{productCode}
+          AND exclusion_date IS NULL
+        ORDER BY inclusion_date DESC
+    </select>
+
+    <!-- 특정 건물이 포함된 REIT 상품 조회 -->
+    <select id="findByBuildingId" parameterType="long" resultMap="ReitBuildingMappingResultMap">
+        SELECT mapping_id, product_code, building_id, inclusion_date,
+               exclusion_date, created_at
+        FROM reit_building_mappings
+        WHERE building_id = #{buildingId}
+        ORDER BY inclusion_date DESC
+    </select>
+
+    <!-- 특정 건물이 현재 포함된 REIT 상품 조회 (개인화 투자상품용) -->
+    <select id="findActiveByBuildingId" parameterType="long" resultMap="ReitBuildingMappingResultMap">
+        SELECT mapping_id, product_code, building_id, inclusion_date,
+               exclusion_date, created_at
+        FROM reit_building_mappings
+        WHERE building_id = #{buildingId}
+          AND exclusion_date IS NULL
+        ORDER BY inclusion_date DESC
+    </select>
+
+    <!-- 매핑 ID로 조회 -->
+    <select id="findByMappingId" parameterType="long" resultMap="ReitBuildingMappingResultMap">
+        SELECT mapping_id, product_code, building_id, inclusion_date,
+               exclusion_date, created_at
+        FROM reit_building_mappings
+        WHERE mapping_id = #{mappingId}
+    </select>
+
+    <!-- 건물을 REIT 상품에 추가 -->
+    <insert id="insertMapping" parameterType="com.living.hana.entity.ReitBuildingMapping">
+        <selectKey keyProperty="mappingId" resultType="long" order="BEFORE">
+            SELECT mapping_id_seq.NEXTVAL FROM dual
+        </selectKey>
+        INSERT INTO reit_building_mappings (
+            mapping_id, product_code, building_id, inclusion_date,
+            exclusion_date, created_at
+        ) VALUES (
+            #{mappingId}, #{productCode}, #{buildingId}, #{inclusionDate},
+            #{exclusionDate}, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- 건물을 REIT 상품에서 제외 -->
+    <update id="updateExclusionDate">
+        UPDATE reit_building_mappings SET
+            exclusion_date = #{exclusionDate}
+        WHERE mapping_id = #{mappingId}
+    </update>
+
+    <!-- 매핑 삭제 -->
+    <delete id="deleteMapping" parameterType="long">
+        DELETE FROM reit_building_mappings
+        WHERE mapping_id = #{mappingId}
+    </delete>
+
+    <!-- 특정 상품의 모든 매핑 삭제 -->
+    <delete id="deleteByProductCode" parameterType="string">
+        DELETE FROM reit_building_mappings
+        WHERE product_code = #{productCode}
+    </delete>
+
+    <!-- 건물별 상세 정보와 함께 매핑 조회 -->
+    <select id="findMappingsWithBuildingByProductCode" parameterType="string" resultMap="ReitBuildingMappingWithBuildingResultMap">
+        SELECT m.mapping_id, m.product_code, m.building_id, m.inclusion_date,
+               m.exclusion_date, m.created_at,
+               b.name as building_name, b.address as building_address
+        FROM reit_building_mappings m
+        LEFT JOIN buildings b ON m.building_id = b.building_id
+        WHERE m.product_code = #{productCode}
+        ORDER BY m.inclusion_date DESC
+    </select>
+
+</mapper>

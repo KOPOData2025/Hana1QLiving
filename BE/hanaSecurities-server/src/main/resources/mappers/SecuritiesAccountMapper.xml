@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hana.securities.mapper.SecuritiesAccountMapper">
+    
+    <insert id="insertAccount" parameterType="com.hana.securities.entity.SecuritiesAccount">
+        INSERT INTO SECURITIES_ACCOUNTS (
+            ACCOUNT_NUMBER, USER_CI, ACCOUNT_NAME, ACCOUNT_TYPE, 
+            STATUS, BALANCE, OPEN_DATE, LAST_TRANSACTION_DATE
+        ) VALUES (
+            #{accountNumber,jdbcType=VARCHAR}, 
+            #{userCi,jdbcType=VARCHAR}, 
+            #{accountName,jdbcType=VARCHAR}, 
+            #{accountType,jdbcType=VARCHAR},
+            #{status,jdbcType=VARCHAR}, 
+            #{balance,jdbcType=NUMERIC}, 
+            #{openDate,jdbcType=TIMESTAMP}, 
+            #{lastTransactionDate,jdbcType=TIMESTAMP}
+        )
+    </insert>
+    
+    <select id="findByAccountNumber" resultType="com.hana.securities.entity.SecuritiesAccount">
+        SELECT 
+            ACCOUNT_NUMBER, USER_CI, ACCOUNT_NAME, ACCOUNT_TYPE,
+            STATUS, BALANCE, OPEN_DATE, LAST_TRANSACTION_DATE
+        FROM SECURITIES_ACCOUNTS 
+        WHERE ACCOUNT_NUMBER = #{accountNumber}
+    </select>
+    
+    <select id="findByUserCi" resultType="com.hana.securities.entity.SecuritiesAccount">
+        SELECT 
+            ACCOUNT_NUMBER, USER_CI, ACCOUNT_NAME, ACCOUNT_TYPE,
+            STATUS, BALANCE, OPEN_DATE, LAST_TRANSACTION_DATE
+        FROM SECURITIES_ACCOUNTS 
+        WHERE USER_CI = #{userCi} AND STATUS = 'ACTIVE'
+        ORDER BY OPEN_DATE DESC
+    </select>
+    
+    <update id="updateUserCi">
+        UPDATE SECURITIES_ACCOUNTS 
+        SET USER_CI = #{userCi,jdbcType=VARCHAR}, LAST_TRANSACTION_DATE = SYSDATE
+        WHERE ACCOUNT_NUMBER = #{accountNumber,jdbcType=VARCHAR}
+    </update>
+    
+    <update id="updateBalance">
+        UPDATE SECURITIES_ACCOUNTS 
+        SET BALANCE = #{balance,jdbcType=NUMERIC}, LAST_TRANSACTION_DATE = SYSDATE
+        WHERE ACCOUNT_NUMBER = #{accountNumber,jdbcType=VARCHAR}
+    </update>
+    
+    <select id="findAll" resultType="com.hana.securities.entity.SecuritiesAccount">
+        SELECT
+            ACCOUNT_NUMBER, USER_CI, ACCOUNT_NAME, ACCOUNT_TYPE,
+            STATUS, BALANCE, OPEN_DATE, LAST_TRANSACTION_DATE
+        FROM SECURITIES_ACCOUNTS
+        ORDER BY OPEN_DATE DESC
+    </select>
+
+    <insert id="insertTransaction">
+        INSERT INTO TRANSACTIONS (
+            ACCOUNT_NUMBER, TRANSACTION_TYPE, PRODUCT_CODE, PRODUCT_NAME, AMOUNT, BALANCE_AFTER
+        ) VALUES (
+            #{accountNumber,jdbcType=VARCHAR},
+            #{transactionType,jdbcType=VARCHAR},
+            #{productCode,jdbcType=VARCHAR},
+            #{productName,jdbcType=VARCHAR},
+            #{amount,jdbcType=NUMERIC},
+            (SELECT BALANCE FROM SECURITIES_ACCOUNTS WHERE ACCOUNT_NUMBER = #{accountNumber,jdbcType=VARCHAR})
+        )
+    </insert>
+
+    <select id="getProductName" resultType="String">
+        SELECT product_name
+        FROM REITS_PRODUCTS
+        WHERE product_id = #{productCode,jdbcType=VARCHAR}
+        AND ROWNUM = 1
+    </select>
+
+</mapper>

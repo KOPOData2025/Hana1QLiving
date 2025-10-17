@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.living.hana.mapper.AdminMapper">
+
+    <!-- 결과 매핑 -->
+    <resultMap id="AdminResultMap" type="com.living.hana.entity.Admin">
+        <id column="ID" property="id"/>
+        <result column="EMPLOYEE_NUMBER" property="employeeNumber"/>
+        <result column="USERNAME" property="username"/>
+        <result column="PASSWORD" property="password"/>
+        <result column="NAME" property="name"/>
+        <result column="EMAIL" property="email"/>
+        <result column="ROLE" property="role"/>
+        <result column="DEPARTMENT" property="department"/>
+        <result column="PHONE" property="phone"/>
+        <result column="IS_ACTIVE" property="isActive"/>
+        <result column="LAST_LOGIN_AT" property="lastLoginAt"/>
+        <result column="CREATED_AT" property="createdAt"/>
+        <result column="UPDATED_AT" property="updatedAt"/>
+    </resultMap>
+
+    <!-- 관리자 조회 -->
+    <select id="findByEmployeeNumber" resultMap="AdminResultMap">
+        SELECT * FROM ADMINS WHERE EMPLOYEE_NUMBER = #{employeeNumber}
+    </select>
+
+    <select id="findByUsername" resultMap="AdminResultMap">
+        SELECT * FROM ADMINS WHERE USERNAME = #{username}
+    </select>
+
+    <select id="findById" resultMap="AdminResultMap">
+        SELECT * FROM ADMINS WHERE ID = #{id}
+    </select>
+
+    <select id="findAll" resultMap="AdminResultMap">
+        SELECT * FROM ADMINS ORDER BY CREATED_AT DESC
+    </select>
+
+    <!-- 관리자 생성 -->
+    <insert id="insert" parameterType="com.living.hana.entity.Admin">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            SELECT SEQ_ADMINS.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO ADMINS (
+            ID, EMPLOYEE_NUMBER, USERNAME, PASSWORD, NAME, EMAIL, 
+            ROLE, DEPARTMENT, PHONE, IS_ACTIVE, CREATED_AT, UPDATED_AT
+        ) VALUES (
+            #{id}, #{employeeNumber}, #{username}, #{password}, #{name}, #{email},
+            #{role}, #{department}, #{phone}, #{isActive}, SYSTIMESTAMP, SYSTIMESTAMP
+        )
+    </insert>
+
+    <!-- 관리자 수정 -->
+    <update id="update" parameterType="com.living.hana.entity.Admin">
+        UPDATE ADMINS SET
+            USERNAME = #{username},
+            NAME = #{name},
+            EMAIL = #{email},
+            ROLE = #{role},
+            DEPARTMENT = #{department},
+            PHONE = #{phone},
+            UPDATED_AT = SYSTIMESTAMP
+        WHERE ID = #{id}
+    </update>
+
+    <!-- 관리자 삭제 -->
+    <delete id="deleteById">
+        DELETE FROM ADMINS WHERE ID = #{id}
+    </delete>
+
+    <!-- 마지막 로그인 시간 업데이트 -->
+    <update id="updateLastLoginAt">
+        UPDATE ADMINS SET LAST_LOGIN_AT = SYSTIMESTAMP WHERE ID = #{id}
+    </update>
+
+</mapper>

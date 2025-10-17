@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.hana_bank.mapper.MarketRateMapper">
+
+    <!-- Result Map -->
+    <resultMap id="marketRateResultMap" type="com.example.hana_bank.entity.MarketRate">
+        <id property="rateId" column="RATE_ID"/>
+        <result property="rateType" column="RATE_TYPE"/>
+        <result property="rateValue" column="RATE_VALUE"/>
+        <result property="effectiveDate" column="EFFECTIVE_DATE"/>
+        <result property="status" column="STATUS"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+    </resultMap>
+
+    <!-- 모든 활성 금리 조회 -->
+    <select id="findAllActiveRates" resultMap="marketRateResultMap">
+        SELECT RATE_ID, RATE_TYPE, RATE_VALUE, EFFECTIVE_DATE, STATUS, CREATED_AT, UPDATED_AT
+        FROM MARKET_RATES
+        WHERE STATUS = 'ACTIVE'
+        ORDER BY RATE_TYPE, EFFECTIVE_DATE DESC
+    </select>
+
+    <!-- 금리 타입별 최신 활성 금리 조회 -->
+    <select id="findByRateType" resultMap="marketRateResultMap">
+        SELECT RATE_ID, RATE_TYPE, RATE_VALUE, EFFECTIVE_DATE, STATUS, CREATED_AT, UPDATED_AT
+        FROM MARKET_RATES
+        WHERE RATE_TYPE = #{rateType}
+        AND STATUS = 'ACTIVE'
+        ORDER BY EFFECTIVE_DATE DESC
+        FETCH FIRST 1 ROWS ONLY
+    </select>
+
+    <!-- 금리 타입과 상태별 조회 -->
+    <select id="findByRateTypeAndStatus" resultMap="marketRateResultMap">
+        SELECT RATE_ID, RATE_TYPE, RATE_VALUE, EFFECTIVE_DATE, STATUS, CREATED_AT, UPDATED_AT
+        FROM MARKET_RATES
+        WHERE RATE_TYPE = #{rateType}
+        AND STATUS = #{status}
+        ORDER BY EFFECTIVE_DATE DESC
+    </select>
+
+    <!-- 금리 정보 입력 -->
+    <insert id="insert" parameterType="com.example.hana_bank.entity.MarketRate">
+        <selectKey keyProperty="rateId" resultType="Long" order="BEFORE">
+            SELECT MARKET_RATES_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO MARKET_RATES (
+            RATE_ID, RATE_TYPE, RATE_VALUE, EFFECTIVE_DATE, STATUS, CREATED_AT, UPDATED_AT
+        ) VALUES (
+            #{rateId}, #{rateType}, #{rateValue}, #{effectiveDate}, #{status}, SYSTIMESTAMP, SYSTIMESTAMP
+        )
+    </insert>
+
+    <!-- 금리 정보 수정 -->
+    <update id="update" parameterType="com.example.hana_bank.entity.MarketRate">
+        UPDATE MARKET_RATES
+        SET RATE_VALUE = #{rateValue},
+            EFFECTIVE_DATE = #{effectiveDate},
+            STATUS = #{status},
+            UPDATED_AT = SYSTIMESTAMP
+        WHERE RATE_ID = #{rateId}
+    </update>
+
+    <!-- 금리 상태 변경 -->
+    <update id="updateStatus">
+        UPDATE MARKET_RATES
+        SET STATUS = #{status},
+            UPDATED_AT = SYSTIMESTAMP
+        WHERE RATE_ID = #{rateId}
+    </update>
+
+</mapper>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.living.hana.mapper.UnitMapper">
+
+    <resultMap id="UnitResultMap" type="com.living.hana.entity.Unit">
+        <id column="ID" property="id" javaType="java.lang.Long" jdbcType="NUMERIC"/>
+        <result column="BUILDING_ID" property="buildingId" javaType="java.lang.Long" jdbcType="NUMERIC"/>
+        <result column="UNIT_NUMBER" property="unitNumber" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result column="FLOOR" property="floor" javaType="java.lang.Integer" jdbcType="NUMERIC"/>
+        <result column="UNIT_TYPE" property="unitType" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result column="AREA" property="area" javaType="java.lang.Double" jdbcType="NUMERIC"/>
+        <result column="MONTHLY_RENT" property="monthlyRent" javaType="java.lang.Double" jdbcType="NUMERIC"/>
+        <result column="DEPOSIT" property="deposit" javaType="java.lang.Double" jdbcType="NUMERIC"/>
+        <result column="STATUS" property="status" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result column="IMAGES" property="images" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result column="CREATED_AT" property="createdAt" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result column="UPDATED_AT" property="updatedAt" javaType="java.lang.String" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="UnitResultMap">
+        SELECT * FROM UNITS ORDER BY ID
+    </select>
+
+    <select id="findById" resultMap="UnitResultMap">
+        SELECT * FROM UNITS WHERE ID = #{id}
+    </select>
+
+    <select id="findByBuildingId" resultMap="UnitResultMap">
+        SELECT * FROM UNITS WHERE BUILDING_ID = #{buildingId} ORDER BY FLOOR, UNIT_NUMBER
+    </select>
+
+    <select id="findByBuildingIdAndUnitNumber" resultMap="UnitResultMap">
+        SELECT * FROM UNITS WHERE BUILDING_ID = #{buildingId} AND UNIT_NUMBER = #{unitNumber}
+    </select>
+
+    <select id="findByStatus" resultMap="UnitResultMap">
+        SELECT * FROM UNITS WHERE STATUS = #{status} ORDER BY ID
+    </select>
+
+    <select id="findAvailableUnits" resultMap="UnitResultMap">
+        SELECT * FROM UNITS WHERE STATUS = 'AVAILABLE' ORDER BY BUILDING_ID, FLOOR, UNIT_NUMBER
+    </select>
+
+    <insert id="insert" parameterType="com.living.hana.entity.Unit" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO UNITS (BUILDING_ID, UNIT_NUMBER, FLOOR, UNIT_TYPE, AREA, MONTHLY_RENT, DEPOSIT, STATUS, IMAGES, CREATED_AT, UPDATED_AT)
+        VALUES (#{buildingId,jdbcType=NUMERIC}, #{unitNumber,jdbcType=VARCHAR}, #{floor,jdbcType=NUMERIC}, #{unitType,jdbcType=VARCHAR}, #{area,jdbcType=NUMERIC}, #{monthlyRent,jdbcType=NUMERIC}, #{deposit,jdbcType=NUMERIC}, #{status,jdbcType=VARCHAR}, #{images,jdbcType=VARCHAR}, #{createdAt,jdbcType=VARCHAR}, #{updatedAt,jdbcType=VARCHAR})
+    </insert>
+
+    <update id="update" parameterType="com.living.hana.entity.Unit">
+        UPDATE UNITS SET 
+            BUILDING_ID = #{buildingId},
+            UNIT_NUMBER = #{unitNumber},
+            FLOOR = #{floor},
+            UNIT_TYPE = #{unitType},
+            AREA = #{area},
+            MONTHLY_RENT = #{monthlyRent},
+            DEPOSIT = #{deposit},
+            STATUS = #{status},
+            IMAGES = #{images},
+            UPDATED_AT = #{updatedAt}
+        WHERE ID = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM UNITS WHERE ID = #{id}
+    </delete>
+
+</mapper>

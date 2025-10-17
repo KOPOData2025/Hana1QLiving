@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.living.hana.mapper.LoanExecutionMapper">
+
+    <resultMap id="LoanExecutionResultMap" type="com.living.hana.entity.LoanExecution">
+        <id column="ID" property="id"/>
+        <result column="LOAN_ID" property="loanId"/>
+        <result column="EXECUTION_DATE" property="executionDate"/>
+        <result column="AMOUNT" property="amount"/>
+        <result column="FROM_ACCOUNT" property="fromAccount"/>
+        <result column="TO_ACCOUNT" property="toAccount"/>
+        <result column="TRANSACTION_ID" property="transactionId"/>
+        <result column="STATUS" property="status"/>
+        <result column="ERROR_MESSAGE" property="errorMessage"/>
+        <result column="CREATED_AT" property="createdAt"/>
+        <result column="UPDATED_AT" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="LoanExecutionResultMap">
+        SELECT * FROM LOAN_EXECUTIONS ORDER BY ID
+    </select>
+
+    <select id="findById" resultMap="LoanExecutionResultMap">
+        SELECT * FROM LOAN_EXECUTIONS WHERE ID = #{id}
+    </select>
+
+    <select id="findByLoanId" resultMap="LoanExecutionResultMap">
+        SELECT * FROM LOAN_EXECUTIONS WHERE LOAN_ID = #{loanId} ORDER BY CREATED_AT DESC
+    </select>
+
+    <select id="findByStatus" resultMap="LoanExecutionResultMap">
+        SELECT * FROM LOAN_EXECUTIONS WHERE STATUS = #{status} ORDER BY CREATED_AT DESC
+    </select>
+
+    <select id="findByTransactionId" resultMap="LoanExecutionResultMap">
+        SELECT * FROM LOAN_EXECUTIONS WHERE TRANSACTION_ID = #{transactionId}
+    </select>
+
+    <insert id="insert" parameterType="com.living.hana.entity.LoanExecution">
+        INSERT INTO LOAN_EXECUTIONS (LOAN_ID, EXECUTION_DATE, AMOUNT, FROM_ACCOUNT, TO_ACCOUNT, TRANSACTION_ID, STATUS, ERROR_MESSAGE, CREATED_AT, UPDATED_AT)
+        VALUES (#{loanId}, #{executionDate}, #{amount}, #{fromAccount}, #{toAccount}, #{transactionId}, #{status}, #{errorMessage}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update" parameterType="com.living.hana.entity.LoanExecution">
+        UPDATE LOAN_EXECUTIONS SET 
+            LOAN_ID = #{loanId},
+            EXECUTION_DATE = #{executionDate},
+            AMOUNT = #{amount},
+            FROM_ACCOUNT = #{fromAccount},
+            TO_ACCOUNT = #{toAccount},
+            TRANSACTION_ID = #{transactionId},
+            STATUS = #{status},
+            ERROR_MESSAGE = #{errorMessage},
+            UPDATED_AT = #{updatedAt}
+        WHERE ID = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM LOAN_EXECUTIONS WHERE ID = #{id}
+    </delete>
+
+</mapper>

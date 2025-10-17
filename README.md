@@ -7,7 +7,7 @@
 
 # 프로젝트 개요
 ## 프로젝트 배경
-<img width="773" height="528" alt="Image" src="https://github.com/user-attachments/assets/9d7a6632-4c83-4c33-96cd-149e8bd5ef13" />
+<img width="762" height="463" alt="Image" src="https://github.com/user-attachments/assets/6581223c-9742-42c6-acdc-65655e93689b" />
 
 - 전세 사기 증가로 인한 월세 상승에 따라 증가하는 오피스텔 수익률 + 청년층의 부동산 투자에 대한 관심
 - 하지만 부동산 구매할 자금이 없는 청년층
@@ -15,7 +15,7 @@
 
 ## 프로젝트 목표
 
-<img width="790" height="561" alt="Image" src="https://github.com/user-attachments/assets/2551c50c-a10a-409d-b91d-1ba27725b652" />
+<img width="782" height="527" alt="Image" src="https://github.com/user-attachments/assets/80a0923d-d00a-42b9-b1d3-f199f9eba802" />
 
 - 한국의 리츠가 배당률이 높음에도 불구하고 인기가 없음
 - 많은 문제점 中 "불투명한 정보 공개"에 집중하여 프로젝트 기획
@@ -71,12 +71,13 @@ project/
 ---
 ## 서비스 아키텍처
 
-<img width="751" height="493" alt="Image" src="https://github.com/user-attachments/assets/ae378615-8762-4f97-9b1d-63dac204905a" />
+<img width="820" height="507" alt="Image" src="https://github.com/user-attachments/assets/18d466a9-f596-4bb0-9716-f12ccb632508" />
+
 
 
 ## 시스템 아키텍처
 
-<img width="955" height="531" alt="Image" src="https://github.com/user-attachments/assets/ed1202cb-ca82-4f0c-acce-b8904983f6fd" />
+<img width="820" height="442" alt="Image" src="https://github.com/user-attachments/assets/71a036eb-2a13-4555-8a10-b4292c9e6def" />
 
 ---
 
@@ -84,17 +85,17 @@ project/
 
 ### 입주자
 
-<img width="900" height="507" alt="Image" src="https://github.com/user-attachments/assets/39f74e0c-285e-4d63-b00c-ae8942017bed" />
+<img width="800" height="440" alt="Image" src="https://github.com/user-attachments/assets/28ba7919-abd7-45e7-a47b-4bb1d67da71b" />
 
 ### 투자자
 
-<img width="1123" height="632" alt="Image" src="https://github.com/user-attachments/assets/fe6e275d-bdda-4045-aefc-300da7153e99" />
+<img width="800" height="440" alt="Image" src="https://github.com/user-attachments/assets/661bcbd2-b5cb-413d-b8a9-c6b6fa6b33a7" />
 
 ### 관리자
 
-<img width="1917" height="907" alt="Image" src="https://github.com/user-attachments/assets/04b463b2-adde-4e93-b180-eed7be628f8b" />
+<img width="800" height="642" alt="Image" src="https://github.com/user-attachments/assets/950f7e0a-09f5-47fe-a382-0f361dad844e" />
 
-<img width="1627" height="817" alt="Image" src="https://github.com/user-attachments/assets/0caec6c6-d332-4518-a064-bed49f719443" />
+<img width="800" height="902" alt="Image" src="https://github.com/user-attachments/assets/9357cda4-53b5-4c90-9ac6-98930d688344" />
 
 ---
 
@@ -104,7 +105,7 @@ project/
 <tr>
 <td rowspan="9" width="200" align="center">
 
-<img width="1024" height="1536" alt="Image" src="https://github.com/user-attachments/assets/2788eb51-04b7-4558-9e27-835160b91837" />
+<img width="1024" height="1536" alt="Image" src="https://github.com/user-attachments/assets/4bf05d1b-f176-45f3-8870-404775a901ab" />
 
 </td>
 <td colspan="4">

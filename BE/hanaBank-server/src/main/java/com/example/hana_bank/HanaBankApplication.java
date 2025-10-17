@@ -23,9 +23,4 @@ public class HanaBankApplication implements CommandLineRunner {
 	public static void main(String[] args) {
 		SpringApplication.run(HanaBankApplication.class, args);
 	}
-
-	@Override
-	public void run(String... args) throws Exception {
-		// 엔드포인트 로깅 비활성화 - 프로덕션 환경에서 불필요
-	}
 }

@@ -41,9 +41,9 @@
 
 ## 리츠 투자 기능 [투자자 측면]
 - [ ] **내가 사는 오피스텔 간접 투자 기능** - 내가 사는 오피스텔이 어떤 리츠의 포트폴리오에 포함되어 있는지 한눈에 확인<br><br>
-- [ ] **지역 기반으로 리츠 투자 기능** - 특정 지역의 부동산 시장에 관심이 있다면, 그 지역 오피스텔을 포함한 리츠를 통해 간접 투자<br><br>
-- [ ] **운영 데이터 기반 투자 정보 제공** - 오피스텔 운영 데이터를 리츠 투자 지표로 제공 <br><br>
+- [ ] **지역 기반 리츠 투자 기능** - 특정 지역의 부동산 시장에 관심이 있다면, 그 지역 오피스텔을 포함한 리츠를 통해 간접 투자<br><br>
 - [ ] **리츠 투자 시뮬레이션** - 과거 데이터를 바탕으로, 투자자의 투자 조건에 맞춘 리츠 수익률 백테스팅 결과 제공<br><br>
+- [ ] **운영 데이터 기반 투자 정보 제공** - 오피스텔 운영 데이터를 리츠 투자 지표로 제공 <br><br>
 
 <img width="2000" height="1414" alt="Image" src="https://github.com/user-attachments/assets/7321012c-5100-4941-8991-7288d19a17ba" />
 
@@ -55,8 +55,19 @@
 
 <img width="2000" height="1414" alt="Image" src="https://github.com/user-attachments/assets/9357cda4-53b5-4c90-9ac6-98930d688344" />
 
+---
+# 특화 기술
+## PL/SQL
+<img width="2000" height="1414" alt="Image" src="https://github.com/user-attachments/assets/8fd170c3-bcda-4631-9a9d-90e379f721ae" />
+
+## 생성형AI
+<img width="2000" height="1414" alt="Image" src="https://github.com/user-attachments/assets/48664c79-817a-4c17-942e-15786f1b69ec" />
+
+## Circuit Breaker
+<img width="2000" height="1414" alt="Image" src="https://github.com/user-attachments/assets/8b1d6453-75aa-4fe0-af07-27cc6dcae370" />
 
 ---
+
 # 서비스 아키텍처
 
 <img width="2000" height="1414" alt="Image" src="https://github.com/user-attachments/assets/99d7883f-1dd1-403c-8dff-bda6588b564d" />
@@ -66,6 +77,11 @@
 # 시스템 아키텍처
 
 <img width="2000" height="1414" alt="Image" src="https://github.com/user-attachments/assets/72696cfb-7f13-4c94-807d-61a3ef10360e" />
+
+---
+
+# 기대효과
+<img width="2000" height="1414" alt="Image" src="https://github.com/user-attachments/assets/fafa00b8-3be8-4c0e-8d07-65d32ebc27fd" />
 
 ---
 

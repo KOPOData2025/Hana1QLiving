@@ -1,13 +1,13 @@
 # [프로젝트명] 하나원큐리빙
 
-
+<img width="2000" height="1414" alt="Image" src="https://github.com/user-attachments/assets/f7e288cf-e8c6-4824-92a6-95754f48e897" />
 > 오피스텔 거주와 리츠 투자를 하나로 연결한 플랫폼
 
 ---
 
 # 프로젝트 개요
 ## 프로젝트 배경
-<img width="762" height="463" alt="Image" src="https://github.com/user-attachments/assets/6581223c-9742-42c6-acdc-65655e93689b" />
+<img width="2000" height="1414" alt="Image" src="https://github.com/user-attachments/assets/ed502536-9af3-4ec3-85fa-5e08919eb73a" />
 
 - 전세 사기 증가로 인한 월세 상승에 따라 증가하는 오피스텔 수익률 + 청년층의 부동산 투자에 대한 관심
 - 하지만 부동산 구매할 자금이 없는 청년층
@@ -15,33 +15,13 @@
 
 ## 프로젝트 목표
 
-<img width="782" height="527" alt="Image" src="https://github.com/user-attachments/assets/80a0923d-d00a-42b9-b1d3-f199f9eba802" />
+<img width="2000" height="1414" alt="Image" src="https://github.com/user-attachments/assets/44ab3f18-6a59-4f83-a9e5-c601a2607b6c" />
 
 - 한국의 리츠가 배당률이 높음에도 불구하고 인기가 없음
 - 많은 문제점 中 "불투명한 정보 공개"에 집중하여 프로젝트 기획
 - 입주자와 투자자가 공존하는 앱을  통해 입주자에게는 편리한 오피스텔 관리 서비스 제공, 
   투자자에게는 정확하고 상세한 오피스텔 관리 데이터를 통해 투자 지표로 활용하도록 함
 
-
-## 프로젝트 기간
-- **개발 기간**: 2025.08.20 ~ 2025.10.12
-- **참여 인원**: 1명
-
-# 프로젝트 구조
-```
-project/
-├── HanaOneQLiving/           # 하나원큐리빙 서비스
-│   ├── BE_OneQLiving/        # 백엔드 
-│   ├── FE_hanaLiving_APP/    # 모바일 앱 
-│   ├── FE_hanaLiving_ERP/    # 관리자 웹 ERP
-│   └── AI_Orchestration/      # 관리자 AI 서비스
-├── HanaBank/                 # 하나은행 서비스
-│   └── BE-hana-bank/         # 백엔드 
-├── HanaSecurities/           # 증권 서비스
-│   └── BE-hana-bank/         # 백엔드 
-└── ksd/                      # 한국예탁결제원 서비스
-    └── BE-hana-bank/         # 백엔드
-```
 
 ---
 
@@ -71,13 +51,13 @@ project/
 ---
 ## 서비스 아키텍처
 
-<img width="820" height="507" alt="Image" src="https://github.com/user-attachments/assets/18d466a9-f596-4bb0-9716-f12ccb632508" />
+<img width="2000" height="1414" alt="Image" src="https://github.com/user-attachments/assets/99d7883f-1dd1-403c-8dff-bda6588b564d" />
 
 
 
 ## 시스템 아키텍처
 
-<img width="820" height="442" alt="Image" src="https://github.com/user-attachments/assets/71a036eb-2a13-4555-8a10-b4292c9e6def" />
+<img width="2000" height="1414" alt="Image" src="https://github.com/user-attachments/assets/72696cfb-7f13-4c94-807d-61a3ef10360e" />
 
 ---
 
@@ -85,19 +65,40 @@ project/
 
 ### 입주자
 
-<img width="800" height="440" alt="Image" src="https://github.com/user-attachments/assets/28ba7919-abd7-45e7-a47b-4bb1d67da71b" />
+<img width="2000" height="1414" alt="Image" src="https://github.com/user-attachments/assets/79bee7ba-b428-42b0-bcc9-0ba6f57e25fe" />
 
 ### 투자자
 
-<img width="800" height="440" alt="Image" src="https://github.com/user-attachments/assets/661bcbd2-b5cb-413d-b8a9-c6b6fa6b33a7" />
+<img width="2000" height="1414" alt="Image" src="https://github.com/user-attachments/assets/7321012c-5100-4941-8991-7288d19a17ba" />
 
 ### 관리자
 
-<img width="800" height="642" alt="Image" src="https://github.com/user-attachments/assets/950f7e0a-09f5-47fe-a382-0f361dad844e" />
+<img width="2000" height="1414" alt="Image" src="https://github.com/user-attachments/assets/950f7e0a-09f5-47fe-a382-0f361dad844e" />
 
-<img width="800" height="902" alt="Image" src="https://github.com/user-attachments/assets/9357cda4-53b5-4c90-9ac6-98930d688344" />
+<img width="2000" height="1414" alt="Image" src="https://github.com/user-attachments/assets/9357cda4-53b5-4c90-9ac6-98930d688344" />
 
 ---
+
+## 프로젝트 기간
+- **개발 기간**: 2025.08.20 ~ 2025.10.12
+- **참여 인원**: 1명
+
+# 프로젝트 구조
+```
+project/
+├── HanaOneQLiving/           # 하나원큐리빙 서비스
+│   ├── BE_OneQLiving/        # 백엔드 
+│   ├── FE_hanaLiving_APP/    # 모바일 앱 
+│   ├── FE_hanaLiving_ERP/    # 관리자 웹 ERP
+│   └── AI_Orchestration/      # 관리자 AI 서비스
+├── HanaBank/                 # 하나은행 서비스
+│   └── BE-hana-bank/         # 백엔드 
+├── HanaSecurities/           # 증권 서비스
+│   └── BE-hana-bank/         # 백엔드 
+└── ksd/                      # 한국예탁결제원 서비스
+    └── BE-hana-bank/         # 백엔드
+```
+
 
 ## 본인 소개
 
